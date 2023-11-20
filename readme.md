@@ -4,6 +4,8 @@ Ce projet est un jeu de tir spatial simple écrit en JavaScript en utilisant la 
 
 ## Comment jouer
 
+[Pour jouer au jeu, Clique ICI](https://habib256.github.io/SpaceCarnage/)
+
 Déplacez votre vaisseau spatial avec la souris. Cliquez avec le bouton gauche de la souris pour tirer. Chaque ennemi que vous détruisez vous rapporte un point.
 
 ## Structure du code
