@@ -9,7 +9,7 @@ class Enemy {
         this.xoff = random(1000);  // For Perlin noise
         this.yoff = random(1000);  // For Perlin noise
         this.x = map(noise(this.xoff), 0, 1, 0, width);
-        this.y = height / 2;map(noise(this.yoff), 0, 1, 0, height - 200); 
+        this.y = map(noise(this.yoff), 0, 1, 0, 300); 
     }
 
     show() {

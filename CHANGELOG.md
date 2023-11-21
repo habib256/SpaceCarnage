@@ -4,6 +4,13 @@ Toutes les modifications notables à ce projet seront documentées dans ce fichi
 
 ## [Unreleased]
 
+## [0.3.0] - 2023-11-20
+
+### Added - Third Version
+
+- Les ennemis sont maintenant créés une seule fois lorsque vous entrez dans l'état de jeu, ce qui empêche la création d'ennemis en quantité infinie.
+- Les ennemis sont maintenant initialisés à une position fixe, puis déplacés à partir de cette position en utilisant le bruit de Perlin, ce qui empêche les ennemis de "sauter" de position à l'initialisation.
+
 ## [0.2.0] - 2023-11-19
 
 ### Added - Explosion Edition
