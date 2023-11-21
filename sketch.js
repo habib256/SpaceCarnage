@@ -2,19 +2,23 @@
 let spaceshipImages = [];
 let enemyImages = [];
 let bgImages = [];
-let explosionImages = []; // Changed from explosionImage to explosionImages
+let explosionImages = [];
+let powerupImages = []; // Added this line
 let gameManager;
+let coinImage;
+let dollarImage;
 
 function preload() {
     loadSpaceShipImages();
     loadBackgroundImages();
     loadEnemyImages();
     loadExplosionImage();
+    loadPowerupImage(); // Added this line
 }
 
 function setup() {
     createCanvas(min(windowWidth-25, 1024), min(windowHeight-25, 1024));
-    gameManager = new GameManager(spaceshipImages, enemyImages, bgImages, explosionImages);
+    gameManager = new GameManager(spaceshipImages, enemyImages, bgImages, explosionImages, powerupImages); // Added powerupImages as an argument
     noCursor();
     frameRate(30); // Définit la vitesse d'affichage à 30 fps
     if (isMobileDevice()) {
@@ -79,6 +83,14 @@ function loadExplosionImage() {
         }
     });
 }
+
+function loadPowerupImage() {
+    for (let i = 0; i <= 1; i++) {
+        let powerupImage = loadImage(`images/PowerUp${String(i).padStart(2, '0')}.png`);
+        powerupImages.push(powerupImage);
+    }
+}
+
 function isMobileDevice() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }

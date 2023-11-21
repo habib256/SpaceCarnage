@@ -1,5 +1,5 @@
 class GameManager {
-    constructor(spaceshipImages, enemyImages, bgImages, explosionImages) {
+    constructor(spaceshipImages, enemyImages, bgImages, explosionImages, powerupImages) {
         this.spaceshipImages = spaceshipImages;
         this.enemyImages = enemyImages;
         this.bgImages = bgImages;
@@ -15,6 +15,7 @@ class GameManager {
         this.gameOverTime = 0; // Added this line
         this.transitionTime = 0; // Added this line
         this.enemiesCreated = false; // Added this line
+        this.powerUps = []; // Added this line
         this.resetGame();
     }
 
@@ -54,7 +55,7 @@ class GameManager {
                 this.explosions.splice(i, 1);
             }
         }
-
+        this.drawScore();
         stroke(0);
         strokeWeight(5);
         fill(255);
@@ -83,6 +84,11 @@ class GameManager {
                 this.explosions.splice(i, 1);
             }
         }
+        this.powerUps.forEach(powerUp => {
+            powerUp.show();
+            powerUp.move();
+            powerUp.rotate();
+        });
     }
 
     drawGameOver() {
@@ -133,6 +139,9 @@ class GameManager {
                     // Create explosion
                     let explosion = new Explosion(this.enemies[j].x, this.enemies[j].y, this.explosionImages);
                     this.explosions.push(explosion);
+                    // Create power-up
+                    let powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, "type", powerupImages[0]); // Added this line
+                    this.powerUps.push(powerUp); // Added this line
                     // Increase score
                     this.score += 5; // Added score increment
                 }
@@ -168,6 +177,15 @@ class GameManager {
                 this.enemyBullets.splice(i, 1);
             }
         }
+        for (let i = this.powerUps.length - 1; i >= 0; i--) {
+            if (this.spaceship.collidesWith(this.powerUps[i])) {
+                // Apply power-up effect
+               this.score += 20;
+
+                // Remove power-up
+                this.powerUps.splice(i, 1);
+            }
+        }
     }
 
     manageGame() {
@@ -194,6 +212,7 @@ class GameManager {
                 this.transitionTime = millis(); 
                 this.wave++;
                 this.enemiesCreated = false; // Added this line
+                this.powerUps = []; // Added this line
                 if (this.wave % 5 === 0) { // Added this condition
                     this.bg = random(this.bgImages);
                 }
