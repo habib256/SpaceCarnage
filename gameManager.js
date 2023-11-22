@@ -251,10 +251,13 @@ class GameManager {
             }
             if (this.wave % 5 === 0) { 
                 if (!this.bossCreated) {
-                    let boss = new Boss(this.enemyImages, 64); // 64 est la taille de base d'un ennemi
-                    boss.x = width / 2 - boss.size / 2; // Centrer le boss horizontalement
-                    boss.y = height / 8; // Positionner le boss à un quart de la hauteur de l'écran
-                    this.enemies.push(boss);
+                    let numberOfBosses = this.wave / 5;
+                    for (let i = 0; i < numberOfBosses; i++) {
+                        let boss = new Boss(this.enemyImages, 64); // 64 est la taille de base d'un ennemi
+                        boss.x = width / 2 - boss.size / 2; // Centrer le boss horizontalement
+                        boss.y = height / 8; // Positionner le boss à un quart de la hauteur de l'écran
+                        this.enemies.push(boss);
+                    }
                     this.bossCreated = true; // Assurez-vous de ne créer le boss qu'une seule fois
                 }
             }
