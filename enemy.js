@@ -10,6 +10,8 @@ class Enemy {
         this.yoff = random(1000);  // For Perlin noise
         this.x = map(noise(this.xoff), 0, 1, 0, width);
         this.y = map(noise(this.yoff), 0, 1, 0, 300); 
+        this.fireRate = random(1500, 4000); // The fire rate will be a random number between 1500 and 4000 milliseconds
+        this.lastFireTime = millis() - random(0, this.fireRate); // Ajoutez un décalage aléatoire à lastFireTime
     }
 
     show() {
@@ -48,7 +50,13 @@ class Enemy {
     }
 
     shoot() {
-        let bullet = new Bullet(this.x + this.size / 2, this.y + this.size / 2, 1); // 1 makes the bullet go down
-        return bullet;
+        let currentTime = millis();
+        if (currentTime - this.lastFireTime >= this.fireRate) {
+            let bullet = new Bullet(this.x + this.size / 2, this.y + this.size / 2, 0, 1);
+            this.lastFireTime = currentTime;
+            this.fireRate = random(1500, 4000); // Reset fireRate to a new random value
+            return bullet;
+        }
+        return null;
     }
 }

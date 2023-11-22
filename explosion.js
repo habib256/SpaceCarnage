@@ -1,7 +1,8 @@
 class Explosion {
-    constructor(x, y, explosionImages) {
+    constructor(x, y, size, explosionImages) {
         this.x = x;
         this.y = y;
+        this.size = size;
         this.explosionImages = explosionImages;
         this.currentImageIndex = 0;
         this.frameCount = 0; // Added a frame counter
@@ -11,7 +12,7 @@ class Explosion {
     show() {
         if (this.currentImageIndex < this.explosionImages.length && this.explosionImages[this.currentImageIndex] instanceof p5.Image) {
             let img = this.explosionImages[this.currentImageIndex];
-            image(img, this.x, this.y, img.width , img.height);
+            image(img, this.x, this.y, this.size, this.size);
             this.frameCount++;
             if (this.frameCount >= this.frameRate) {
                 this.currentImageIndex++;

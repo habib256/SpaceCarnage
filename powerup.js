@@ -16,11 +16,9 @@ class PowerUp {
         this.image.resize(16, 0); // Changed this line
         image(this.image, 0, 0);
         pop();
-    }
-
-    rotate() {
         this.rotation += 0.5; // Adjust this value to change the speed of rotation
     }
+
 
     offScreen() {
         return this.y > height; // Added this line
