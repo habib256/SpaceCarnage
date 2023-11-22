@@ -124,7 +124,7 @@ class GameManager {
             strokeWeight(5);
             fill(255);
             textSize(24);
-            text("Vies: " + this.spaceship.lives, 5, 50); // Ajoutez cette ligne
+            text("SpaceShip: " + this.spaceship.lives, 5, 50); // Ajoutez cette ligne
     };
 
     manageGame() {
