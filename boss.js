@@ -6,7 +6,7 @@ class Boss extends Enemy {
         this.flashDuration = 6; // Durée du clignotement en frames
         this.flashCounter = 0;
         this.angle = 0; // Angle initial pour le tir rotatif
-        this.fireRate = 300;
+        this.fireRate = 400;
     }
 
     shoot() {

@@ -11,7 +11,7 @@ class Enemy {
         this.yoff = random(1000);  // For Perlin noise
         this.x = map(noise(this.xoff), 0, 1, 0, width);
         this.y = map(noise(this.yoff), 0, 1, 0, 300); 
-        this.fireRate = random(1500, 4000); // The fire rate will be a random number between 1500 and 4000 milliseconds
+        this.fireRate = random(2000, 4000); // The fire rate will be a random number between 2000 and 4000 milliseconds
         this.lastFireTime = millis() - random(0, this.fireRate); // Ajoutez un décalage aléatoire à lastFireTime
     }
 
@@ -32,22 +32,9 @@ class Enemy {
         this.yoff += 0.01;
     } 
 
-    hits(spaceship) {
-        let d = dist(this.x, this.y, spaceship.x, spaceship.y);
-        if (d < this.size / 2 + spaceship.size / 2) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     collidesWith(other) {
         let d = dist(this.x + this.size / 2, this.y + this.size / 2, other.x + other.size / 2, other.y + other.size / 2);
         return (d < this.size / 2 + other.size / 2);
-    }
-
-    destroy() {
-        this.toDelete = true;
     }
 
     shoot() {

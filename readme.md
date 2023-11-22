@@ -6,7 +6,7 @@ Ce projet est un jeu de tir spatial écrit en JavaScript utilisant la bibliothè
 
 [Pour jouer au jeu, Clique ICI](https://habib256.github.io/SpaceCarnage/)
 
-Vous contrôler un vaisseau spatial et tirer sur les ennemis qui apparaissent à l'écran. Vous pouvez déplacer votre vaisseau en déplaçant la souris. Le vaisseau suivra le mouvement de votre souris. Pour tirer, vous devez cliquer avec le bouton gauche de la souris. Chaque fois que vous cliquez, le vaisseau spatial tirera une balle.
+Vous contrôlez un vaisseau spatial et tirez sur les ennemis qui apparaissent à l'écran. Vous pouvez déplacer votre vaisseau en déplaçant la souris. Le vaisseau suivra le mouvement de votre souris. Pour tirer, vous devez cliquer avec le bouton gauche de la souris. Chaque fois que vous cliquez, le vaisseau spatial tirera une balle.
 
 Les ennemis apparaissent en haut de l'écran. Ils peuvent également tirer des balles en direction de votre vaisseau spatial.
 

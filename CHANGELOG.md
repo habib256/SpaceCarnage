@@ -2,7 +2,10 @@
 
 Toutes les modifications notables à ce projet seront documentées dans ce fichier.
 
-## [Unreleased]
+## [0.4.1] - 2023-11-22 - Factorisation Edition
+
+- Le code de gameManager.js a été totalement refactorisé pour augmenter la lisibilité.
+- Les graphismes ont été redimensionnés pour augmenter la vitesse de téléchargement.
 
 ## [0.4.0] - 2023-11-22 - Boss Edition
 

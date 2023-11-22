@@ -17,7 +17,7 @@ class GameManager {
         this.powerUps = []; 
         this.bossCreated = false; 
         this.resetGame();
-    }
+    };
 
     resetGame() {
         this.bullets = [];
@@ -33,7 +33,7 @@ class GameManager {
         this.wave = 1; 
         this.transitionTime = millis();
         this.enemiesCreated = false; // Added this line
-    }
+    };
 
     drawTitle() {
         background(0);
@@ -41,65 +41,48 @@ class GameManager {
         textSize(40);
         text("Spaceship Carnage",0, 50);
         text("Press any key to start", 0, 90);
-    }
+    };
 
-    drawTransition() {
-        image(this.bg, 0, 0);
-        this.spaceship.show(); 
-        this.bullets.forEach(bullet => {
-            bullet.show();
-            bullet.move();
+    drawUI() {
+        this.drawLives();
+        this.drawScore();
+    };
+
+    drawElements(elements) {
+        elements.forEach(element => {
+            element.show();
+            element.move();
         });
-        this.enemyBullets.forEach(enemyBullet => {
-            enemyBullet.show();
-            enemyBullet.move();
-        });
-        this.powerUps.forEach(powerUp => {
-            powerUp.show();
-            powerUp.move();
-        });
+    };
+
+    drawExplosions() {
         for (let i = this.explosions.length - 1; i >= 0; i--) {
             if (this.explosions[i].show()) {
                 this.explosions.splice(i, 1);
             }
         }
+    };
+
+    drawTransition() {
+        image(this.bg, 0, 0);
+        this.spaceship.show(); 
+        this.drawElements(this.bullets);
+        this.drawElements(this.enemyBullets);
+        this.drawElements(this.powerUps);
+        this.drawExplosions();
         this.drawScore();
+        this.drawLives();
         stroke(0);
         strokeWeight(5);
         fill(255);
         textSize(48);
         let waveText = "Vague " + this.wave;
         text(waveText, (width - textWidth(waveText)) / 2, height / 8);
-    }
-
-    drawGame() {
-        image(this.bg, 0, 0);
-        this.spaceship.show(); 
-        this.bullets.forEach(bullet => {
-            bullet.show();
-            bullet.move();
-        });
-        this.enemies.forEach(enemy => {
-            enemy.show();
-            enemy.move();
-        });
-        this.enemyBullets.forEach(enemyBullet => {
-            enemyBullet.show();
-            enemyBullet.move();
-        });
-        for (let i = this.explosions.length - 1; i >= 0; i--) {
-            if (this.explosions[i].show()) {
-                this.explosions.splice(i, 1);
-            }
-        }
-        this.powerUps.forEach(powerUp => {
-            powerUp.show();
-            powerUp.move();
-        });
-    }
+    };
 
     drawGameOver() {
         image(this.bg, 0, 0);
+        this.drawExplosions();
         textSize(64);
         strokeWeight(5);
         stroke(0);
@@ -110,13 +93,19 @@ class GameManager {
         if (highScore === null || this.score > highScore) {
             localStorage.setItem('highScore', this.score);
         }
-        // Dessiner seulement les explosions
-        for (let i = this.explosions.length - 1; i >= 0; i--) {
-            if (this.explosions[i].show()) {
-                this.explosions.splice(i, 1);
-            }
-        }
-    }
+        
+    };
+
+    drawGame() {
+        image(this.bg, 0, 0);
+        this.spaceship.show(); 
+        this.drawElements(this.bullets);
+        this.drawElements(this.enemies);
+        this.drawElements(this.enemyBullets);
+        this.drawElements(this.powerUps);
+        this.drawExplosions();
+    };
+
 
     drawScore() {
         stroke(0);
@@ -125,31 +114,174 @@ class GameManager {
         textSize(24);
         text("Score: " + this.score, width - 150, 25);
         let highScore = localStorage.getItem('highScore') || 0;
-        text("Best: " + highScore, 5, 25);
+        text("Best: " + highScore, 5, 25);   
+    };
+
+    drawLives() {
+    stroke(0);
+            strokeWeight(5);
+            fill(255);
+            textSize(24);
+            text("Vies: " + this.spaceship.lives, 5, 50); // Ajoutez cette ligne
+    };
+
+    manageGame() {
+        if (this.gameState === "title") {
+            this.drawTitle();
+        } else if (this.gameState === "game") {
+            this.handleGameLogic();
+        } else if (this.gameState === "transition") {
+            this.handleTransitionState();
+        } else if (this.gameState === "gameOver") {
+            this.handleGameOverState();
+        }
+        this.updateSpaceshipPosition();
+        this.handleEnemyBullets();
+    };
+
+    handleGameLogic() {
+        this.createEnemiesIfNeeded();
+        this.createBossIfNeeded();
+        this.drawGame();
+        this.drawUI();
+        this.handleCollisions();
+        this.fireBulletIfNeeded();
+        this.handleAllEnemiesDestroyed();
+    };
+
+    handleTransitionState() {
+        this.drawTransition();
+        this.checkSpaceshipCollisions();
+        this.checkPowerUpsCollisions();
+        this.handleGameOver();
+        this.moveToNextGameStateIfNeeded();
+    };
+
+    handleGameOver() {
+        if (this.spaceship.lives <= 0) {
+            this.gameOver = true;
+            this.gameState = "gameOver";
+            this.gameOverTime = millis();
+        }
+    };
+
+    handleGameOverState() {
+        this.drawGameOver();
+        this.drawScore();
+    };
+
+    moveToNextGameStateIfNeeded() {
+        // Check if the spaceship has no more lives
+        if (this.spaceship.lives <= 0) {
+            this.gameOver = true;
+            this.gameState = "gameOver";
+            // Record the time when the game ends
+            this.gameOverTime = millis();
+        }   
+        // Move to game state after a certain delay
+        if (millis() - this.transitionTime >= 2000) { // Changed from this.gameOverTime
+            this.gameState = "game";
+            // Si la vague est un multiple de 5, change l'image de fond
+            if (this.wave % 5 === 0) { 
+                this.bg = random(this.bgImages);
+            }  
+            // Réinitialiser les variables pour la prochaine vague
+            this.enemiesCreated = false;
+            this.bossCreated = false;
+        }
+
+    };
+
+    updateSpaceshipPosition(){
+        this.spaceship.x = constrain(mouseX - this.spaceship.size / 2, 0, width - this.spaceship.size);
+        this.spaceship.y = constrain(mouseY - this.spaceship.size / 2, 0, height - this.spaceship.size);
+    };
+
+    fireBulletIfNeeded() {
+        // Si le bouton de la souris est pressé et que le temps écoulé depuis le dernier tir est supérieur au taux de tir, tire une balle
+        let currentTime = millis();
+        if (mouseIsPressed && mouseButton === LEFT && currentTime - this.lastFireTime >= this.fireRate) {
+            let bullet = new Bullet(this.spaceship.x + this.spaceship.size / 2, this.spaceship.y + this.spaceship.size / 2, 0, -1);
+            this.bullets.push(bullet);
+            this.lastFireTime = currentTime;
+        }
     }
 
+    updateSpaceshipLives() {
+        // Decrement spaceship's lives
+        this.spaceship.lives--;
+        // If spaceship has no more lives, end the game
+        if (this.spaceship.lives <= 0) {
+            this.gameOver = true;
+            this.gameState = "gameOver";
+            // Record the time when the game ends
+            this.gameOverTime = millis();
+        }
+        // Create a new explosion at the spaceship's position
+        let explosion = new Explosion(this.spaceship.x, this.spaceship.y, this.spaceship.size, this.explosionImages);
+        // Add the explosion to the list of explosions
+        this.explosions.push(explosion);
+    };
+
+    handleEnemyBullets(){
+        for (let i = 0; i < this.enemies.length; i++) {
+            let enemyBullet = this.enemies[i].shoot();
+            if (enemyBullet !== null) {
+                this.enemyBullets.push(enemyBullet);
+            }
+        }
+    };
+
+    handleAllEnemiesDestroyed() {
+        // Si tous les ennemis sont détruits, passe à l'état de transition et prépare la prochaine vague
+        if (this.enemies.length === 0) {
+            this.gameState = "transition";
+            this.transitionTime = millis(); 
+            this.wave++;
+            this.enemiesCreated = false; 
+            this.bossCreated = false; // Réinitialisez this.bossCreated à false ici
+        }
+    }
+
+    createEnemiesIfNeeded() {
+        // Si les ennemis n'ont pas encore été créés pour cette vague, crée les ennemis
+        if (!this.enemiesCreated) { 
+            for (let i = 0; i < this.wave; i++) {
+                this.enemies.push(new Enemy(this.enemyImages, 64));
+            }
+            this.enemiesCreated = true; 
+        }
+    }
+
+    createBossIfNeeded () {
+        if (this.wave % 5 === 0) { 
+            if (!this.bossCreated) {
+                let numberOfBosses = this.wave / 5;
+                for (let i = 0; i < numberOfBosses; i++) {
+                    let boss = new Boss(this.enemyImages, 64); // 64 est la taille de base d'un ennemi
+                    boss.x = width / 2 - boss.size / 2; // Centrer le boss horizontalement
+                    boss.y = height / 8; // Positionner le boss à un quart de la hauteur de l'écran
+                    this.enemies.push(boss);
+                }
+                this.bossCreated = true; // Assurez-vous de ne créer le boss qu'une seule fois
+            }
+        }
+    }
+
+    handleCollisions() {
+        this.checkSpaceshipCollisions();
+        this.checkBulletsCollisions();
+        this.checkPowerUpsCollisions();
+    };
 
     checkSpaceshipCollisions() {
         // Check for collisions between the spaceship and all enemies
         for (let i = this.enemies.length - 1; i >= 0; i--) {
             // If the spaceship collides with an enemy
             if (this.spaceship.collidesWith(this.enemies[i])) {
-                // End the game and change the game state to "gameOver"
-                this.gameOver = true;
-                this.gameState = "gameOver";
-                // Record the time when the game ends
-                this.gameOverTime = millis();
-                // Create a new explosion at the spaceship's position
-                let explosion = new Explosion(this.spaceship.x, this.spaceship.y,this.spaceship.size, this.explosionImages);
-                // Add the explosion to the list of explosions
-                this.explosions.push(explosion);
-                // Stop checking for collisions because the game is over
-                break;
-            }
-
-            // If an enemy is marked for deletion, remove it from the list of enemies
-            if (this.enemies[i].toDelete) {
+                this.updateSpaceshipLives();
                 this.enemies.splice(i, 1);
+                break;
             }
         }
 
@@ -158,15 +290,9 @@ class GameManager {
 
             // Si le vaisseau spatial entre en collision avec une balle ennemie
             if (this.spaceship.collidesWith(this.enemyBullets[i])) {
-                // End the game and change the game state to "gameOver"
-                this.gameOver = true;
-                this.gameState = "gameOver";
-                // Record the time when the game ends
-                this.gameOverTime = millis();
-                // Create a new explosion at the spaceship's position
-                let explosion = new Explosion(this.spaceship.x, this.spaceship.y, this.spaceship.size, this.explosionImages);
-                // Add the explosion to the list of explosions
-                this.explosions.push(explosion);
+                this.updateSpaceshipLives();
+                // Mark the enemy bullet for deletion
+                this.enemyBullets.splice(i, 1);
                 break;
             }
 
@@ -176,6 +302,7 @@ class GameManager {
             }
         }
     };
+
     checkBulletsCollisions() {
         // Check for collisions between all spaceship bullets and all enemies
         for (let i = this.bullets.length - 1; i >= 0; i--) { 
@@ -191,17 +318,23 @@ class GameManager {
                     }
                     // Si la santé de l'ennemi atteint 0, le détruire
                     if (this.enemies[j].health <= 0) {
-                        this.enemies[j].destroy();
                         // Créer une explosion à la position de l'ennemi
                         let explosion = new Explosion(this.enemies[j].x, this.enemies[j].y, this.enemies[j].size, this.explosionImages);
                         // Ajouter l'explosion à la liste des explosions
                         this.explosions.push(explosion);
-                        // Créer un power-up à la position de l'ennemi
-                        let powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, "type", powerupImages[0]); 
-                        // Ajouter le power-up à la liste des power-ups
-                        this.powerUps.push(powerUp); 
+                        let powerUp;
                         // Augmenter le score
-                        this.score += 5; 
+                        if (this.enemies[j] instanceof Boss) {
+                            this.score += 20; 
+                            powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, "type", powerupImages[0]); 
+                        } else {
+                            this.score += 5; 
+                            // Créer un power-up à la position de l'ennemi
+                            powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, "type", powerupImages[0]); 
+                        }
+                        // Ajouter le power-up à la liste des power-ups
+                        this.powerUps.push(powerUp);   
+                        this.enemies.splice(j, 1);
                     }
                     // Détruire la balle
                     this.bullets[i].destroy();
@@ -229,90 +362,6 @@ class GameManager {
         }
     };
 
-    checkCollisions() {
-        this.checkSpaceshipCollisions();
-        this.checkBulletsCollisions();
-        this.checkPowerUpsCollisions();
-    };
-
-    manageGame() {
-        // Si l'état du jeu est "title", dessine l'écran du titre
-    if (this.gameState === "title") {
-            this.drawTitle();
-        }
-        // Si l'état du jeu est "game", gère la logique du jeu
-        else if (this.gameState === "game") {
-            // Si les ennemis n'ont pas encore été créés pour cette vague, crée les ennemis
-            if (!this.enemiesCreated) { 
-                for (let i = 0; i < this.wave; i++) {
-                    this.enemies.push(new Enemy(this.enemyImages, 64));
-                }
-                this.enemiesCreated = true; 
-            }
-            if (this.wave % 5 === 0) { 
-                if (!this.bossCreated) {
-                    let numberOfBosses = this.wave / 5;
-                    for (let i = 0; i < numberOfBosses; i++) {
-                        let boss = new Boss(this.enemyImages, 64); // 64 est la taille de base d'un ennemi
-                        boss.x = width / 2 - boss.size / 2; // Centrer le boss horizontalement
-                        boss.y = height / 8; // Positionner le boss à un quart de la hauteur de l'écran
-                        this.enemies.push(boss);
-                    }
-                    this.bossCreated = true; // Assurez-vous de ne créer le boss qu'une seule fois
-                }
-            }
-            // Dessine le jeu, le score et vérifie les collisions
-            this.drawGame();
-            this.drawScore();
-            this.checkCollisions();
-
-            // Si le bouton de la souris est pressé et que le temps écoulé depuis le dernier tir est supérieur au taux de tir, tire une balle
-            let currentTime = millis();
-            if (mouseIsPressed && mouseButton === LEFT && currentTime - this.lastFireTime >= this.fireRate) {
-                let bullet = new Bullet(this.spaceship.x + this.spaceship.size / 2, this.spaceship.y + this.spaceship.size / 2, 0, -1);
-                this.bullets.push(bullet);
-                this.lastFireTime = currentTime;
-            }
-            // Si tous les ennemis sont détruits, passe à l'état de transition et prépare la prochaine vague
-            if (this.enemies.length === 0) {
-                this.gameState = "transition";
-                this.transitionTime = millis(); 
-                this.wave++;
-                this.enemiesCreated = false; 
-                this.bossCreated = false; // Réinitialisez this.bossCreated à false ici
-            }
-        } else if (this.gameState === "transition") {
-            this.drawTransition();
-            this.checkSpaceshipCollisions();
-            this.checkPowerUpsCollisions();
-            // Move to game state after a certain delay
-            if (millis() - this.transitionTime >= 2000) { // Changed from this.gameOverTime
-                this.gameState = "game";
-                // Si la vague est un multiple de 5, change l'image de fond
-                if (this.wave % 5 === 0) { 
-                    this.bg = random(this.bgImages);
-                }  
-            }
-        } else if (this.gameState === "gameOver") {
-            this.drawGameOver();
-            // Dessiner seulement les explosions
-            for (let i = this.explosions.length - 1; i >= 0; i--) {
-                if (this.explosions[i].show()) {
-                    this.explosions.splice(i, 1);
-                }
-            }
-        }
-
-        this.spaceship.x = constrain(mouseX - this.spaceship.size / 2, 0, width - this.spaceship.size);
-        this.spaceship.y = constrain(mouseY - this.spaceship.size / 2, 0, height - this.spaceship.size);
-
-        for (let i = 0; i < this.enemies.length; i++) {
-            let enemyBullet = this.enemies[i].shoot();
-            if (enemyBullet !== null) {
-                this.enemyBullets.push(enemyBullet);
-            }
-        }
-    }
 
     handleMousePressed() {
         if (mouseButton === LEFT) {
@@ -328,6 +377,7 @@ class GameManager {
     
         }
     }
+
 
     handleMouseReleased() {
         if (this.gameState === "game") {
