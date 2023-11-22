@@ -39,8 +39,10 @@ class GameManager {
         background(0);
         fill(255);
         textSize(40);
-        text("Spaceship Carnage",0, 50);
-        text("Press any key to start", 0, 90);
+        let titleText = "Spaceship Carnage";
+        let pressKeyText = "Press any key to start";
+        text(titleText, (width - textWidth(titleText)) / 2, 50);
+        text(pressKeyText, (width - textWidth(pressKeyText)) / 2, 90);
     };
 
     drawUI() {
