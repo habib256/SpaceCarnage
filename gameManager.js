@@ -76,7 +76,7 @@ class GameManager {
         strokeWeight(5);
         fill(255);
         textSize(48);
-        let waveText = "Vague " + this.wave;
+        let waveText = "Wave " + this.wave;
         text(waveText, (width - textWidth(waveText)) / 2, height / 8);
     };
 
@@ -326,11 +326,11 @@ class GameManager {
                         // Augmenter le score
                         if (this.enemies[j] instanceof Boss) {
                             this.score += 20; 
-                            powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, "type", powerupImages[0]); 
+                            powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 32, powerupImages[1]); 
                         } else {
                             this.score += 5; 
                             // Créer un power-up à la position de l'ennemi
-                            powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, "type", powerupImages[0]); 
+                            powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 16, powerupImages[0]); 
                         }
                         // Ajouter le power-up à la liste des power-ups
                         this.powerUps.push(powerUp);   

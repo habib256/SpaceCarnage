@@ -58,7 +58,7 @@ function loadSpaceShipImages() {
     }
 }
 function loadBackgroundImages() {
-    for (let i = 0; i <= 8; i++) {
+    for (let i = 0; i <= 7; i++) {
         let bgImage = loadImage(`images/Background${String(i).padStart(2, '0')}.png`);
         bgImages.push(bgImage);
     }

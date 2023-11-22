@@ -1,9 +1,8 @@
 class PowerUp {
-    constructor(x, y, type, image) {
+    constructor(x, y, size, image) {
         this.x = x+32;
         this.y = y+32;
-        this.size = 16;
-        this.type = type;
+        this.size = size;
         this.image = image;
         this.rotation = 0;
     }
@@ -13,8 +12,12 @@ class PowerUp {
         translate(this.x, this.y);
         //rotate(this.rotation);
         imageMode(CENTER);
-        this.image.resize(16, 0); // Changed this line
-        image(this.image, 0, 0);
+        if (this.image.width > 0 && this.image.height > 0) {
+            this.image.resize(this.size, 0);
+            image(this.image, 0, 0);
+        } else {
+            console.log('Image not loaded');
+        }
         pop();
         //this.rotation += 0.5; // Adjust this value to change the speed of rotation
     }
