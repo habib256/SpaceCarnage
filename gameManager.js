@@ -99,6 +99,7 @@ class GameManager {
     }
 
     drawGameOver() {
+        image(this.bg, 0, 0);
         textSize(64);
         strokeWeight(5);
         stroke(0);
