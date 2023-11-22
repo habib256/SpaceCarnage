@@ -11,12 +11,12 @@ class PowerUp {
     show() {
         push();
         translate(this.x, this.y);
-        rotate(this.rotation);
+        //rotate(this.rotation);
         imageMode(CENTER);
         this.image.resize(16, 0); // Changed this line
         image(this.image, 0, 0);
         pop();
-        this.rotation += 0.5; // Adjust this value to change the speed of rotation
+        //this.rotation += 0.5; // Adjust this value to change the speed of rotation
     }
 
 
