@@ -1,6 +1,10 @@
 class Boss extends Enemy {
     constructor(images, size) {
         super(images, size *2); // Le boss est deux fois plus grand
+        this.health = 5; // Les boss ont 5 points de vie
+        this.flashing = false;
+        this.flashDuration = 6; // Durée du clignotement en frames
+        this.flashCounter = 0;
         this.angle = 0; // Angle initial pour le tir rotatif
         this.fireRate = 300;
     }
@@ -20,5 +24,19 @@ class Boss extends Enemy {
             return bullet;
         }
         return null;
+    }
+    show() {
+        if (!this.flashing || this.flashCounter % 2 === 0) {
+            // Afficher le boss seulement si il ne clignote pas ou si le compteur de clignotement est pair
+            super.show();
+        }
+        if (this.flashing) {
+            this.flashCounter++;
+            if (this.flashCounter > this.flashDuration) {
+                // Arrêter le clignotement après flashDuration frames
+                this.flashing = false;
+                this.flashCounter = 0;
+            }
+        }
     }
 }

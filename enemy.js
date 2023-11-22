@@ -5,6 +5,7 @@ class Enemy {
         this.image = random(images); // Choose a random image from the array
         this.size = size;
         this.speed = 4;
+        this.health = 1; // Les ennemis ont 1 point de vie
         this.toDelete = false;
         this.xoff = random(1000);  // For Perlin noise
         this.yoff = random(1000);  // For Perlin noise

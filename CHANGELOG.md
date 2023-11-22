@@ -4,24 +4,29 @@ Toutes les modifications notables à ce projet seront documentées dans ce fichi
 
 ## [Unreleased]
 
-## [0.3.0] - 2023-11-20
+## [0.4.0] - 2023-11-22 - Boss Edition
 
-### Added - Third Version
+- Les boss apparaissent maintenant à chaque vagues multiple de 5.
+- Les boss ont 5 points de vie, contrairement aux ennemis qui n'en ont qu'un.
+- Lorsqu'un boss perd une vie, il clignote pour indiquer qu'il a été touché.
+- Le changement de fond se produit maintenant à la fin de l'état de transition, et non au début.
+- Les ennemis ne tirent plus tous en même temps au début d'une vague. Leur temps de tir initial est maintenant décalé aléatoirement pour plus de variété.
+- Correction d'un bug où le boss n'apparaissait pas à la vague 5.
+- Correction d'un bug où le boss ne clignotait pas lorsqu'il perdait une vie.
+
+
+## [0.3.0] - 2023-11-20 - Third Version
 
 - Les ennemis sont maintenant créés une seule fois lorsque vous entrez dans l'état de jeu, ce qui empêche la création d'ennemis en quantité infinie.
 - Les ennemis sont maintenant initialisés à une position fixe, puis déplacés à partir de cette position en utilisant le bruit de Perlin, ce qui empêche les ennemis de "sauter" de position à l'initialisation.
 
-## [0.2.0] - 2023-11-19
-
-### Added - Explosion Edition
+## [0.2.0] - 2023-11-19 - Explosion Edition
 
 - Les balles ennemies sont maintenant réinitialisées lors d'un game over.
 - Les explosions sont maintenant affichées lorsqu'un vaisseau spatial entre en collision avec un ennemi ou une balle ennemie.
 - Les explosions continuent maintenant à être affichées après un game over.
 
-## [0.1.0] - 2023-11-18
-
-### Added - First Version
+## [0.1.0] - 2023-11-18 - First Version
 
 - Le vaisseau spatial est maintenant contrôlé par la souris.
 - Les ennemis peuvent maintenant tirer des balles.

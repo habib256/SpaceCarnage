@@ -182,19 +182,28 @@ class GameManager {
             for (let j = this.enemies.length - 1; j >= 0; j--) {
                 // Si une balle touche un ennemi
                 if (this.bullets[i].hits(this.enemies[j])) {
-                    // Détruire la balle et l'ennemi
+                    // Décrémenter la santé de l'ennemi
+                    this.enemies[j].health--;
+                    // Si l'ennemi est un boss, le faire clignoter
+                    if (this.enemies[j] instanceof Boss) {
+                        this.enemies[j].flashing = true;
+                    }
+                    // Si la santé de l'ennemi atteint 0, le détruire
+                    if (this.enemies[j].health <= 0) {
+                        this.enemies[j].destroy();
+                        // Créer une explosion à la position de l'ennemi
+                        let explosion = new Explosion(this.enemies[j].x, this.enemies[j].y, this.enemies[j].size, this.explosionImages);
+                        // Ajouter l'explosion à la liste des explosions
+                        this.explosions.push(explosion);
+                        // Créer un power-up à la position de l'ennemi
+                        let powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, "type", powerupImages[0]); 
+                        // Ajouter le power-up à la liste des power-ups
+                        this.powerUps.push(powerUp); 
+                        // Augmenter le score
+                        this.score += 5; 
+                    }
+                    // Détruire la balle
                     this.bullets[i].destroy();
-                    this.enemies[j].destroy();
-                    // Créer une explosion à la position de l'ennemi
-                    let explosion = new Explosion(this.enemies[j].x, this.enemies[j].y, this.enemies[j].size, this.explosionImages);
-                    // Ajouter l'explosion à la liste des explosions
-                    this.explosions.push(explosion);
-                    // Créer un power-up à la position de l'ennemi
-                    let powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, "type", powerupImages[0]); 
-                    // Ajouter le power-up à la liste des power-ups
-                    this.powerUps.push(powerUp); 
-                    // Augmenter le score
-                    this.score += 5; 
                 }
             }
 
