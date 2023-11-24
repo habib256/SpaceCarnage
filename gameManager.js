@@ -9,6 +9,8 @@ class GameManager {
         this.explosions = [];
         this.gameOver = false;
         this.pauseGame = true;
+        this.lastTouchX = 0;
+        this.lastTouchY = 0;
         this.fireRate = 150; // 150 milliseconds = 0.1 seconds
         this.lastFireTime = 0;
         this.gameOverTime = 0; 
@@ -195,14 +197,17 @@ class GameManager {
     };
 
     updateSpaceshipPosition() {
-        // Si l'utilisateur touche l'écran (smartphone)
-        if (touches.length > 0 && touches[0] !== undefined) { // Ajout de la vérification touches[0] !== undefined
+        if (touches.length > 0 && touches[0] !== undefined) {
             this.spaceship.x = touches[0].x - this.spaceship.size / 2;
             this.spaceship.y = touches[0].y - 60 - this.spaceship.size / 2;
-        }
-        if (touches.length === 0) { // Si l'utilisateur utilise la souris (PC de bureau)
-            this.spaceship.x = mouseX - this.spaceship.size / 2;
-            this.spaceship.y = mouseY - this.spaceship.size / 2;
+            // Mettez à jour lastTouchX et lastTouchY chaque fois que vous touchez l'écran
+            this.lastTouchX = this.spaceship.x;
+            this.lastTouchY = this.spaceship.y;
+        } else if (touches.length === 0) {
+            // Si l'utilisateur utilise un PC, suivez la position de la souris
+            // Si l'utilisateur utilise un smartphone, restez à la dernière position du toucher
+            this.spaceship.x = mouseX ? mouseX - this.spaceship.size / 2 : this.lastTouchX;
+            this.spaceship.y = mouseY ? mouseY - this.spaceship.size / 2 : this.lastTouchY;
         }
         this.spaceship.x = constrain(this.spaceship.x, 0, width - this.spaceship.size);
         this.spaceship.y = constrain(this.spaceship.y, 0, height - this.spaceship.size);
@@ -427,3 +432,4 @@ class GameManager {
         this.gameState = "game";
     }
 }
+
