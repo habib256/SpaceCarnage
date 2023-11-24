@@ -19,6 +19,7 @@ class GameManager {
         this.enemiesCreated = false; 
         this.powerUps = []; 
         this.bossCreated = false; 
+        this.mouseUsed = false;
         this.resetGame();
     };
 
@@ -170,6 +171,8 @@ class GameManager {
             this.gameOver = true;
             this.gameState = "gameOver";
             this.gameOverTime = millis();
+            this.bgImageIndex = 0;
+            this.bg = this.bgImages[this.bgImageIndex];
         }
     };
 
@@ -213,7 +216,7 @@ class GameManager {
             // Mettez à jour lastTouchX et lastTouchY chaque fois que vous touchez l'écran
             this.lastTouchX = this.spaceship.x;
             this.lastTouchY = this.spaceship.y;
-        } else {
+        } else if (this.mouseUsed) {
             // Si l'utilisateur utilise un PC, suivez la position de la souris
             // Si l'utilisateur utilise un smartphone, restez à la dernière position du toucher
             this.spaceship.x = mouseX ? mouseX - this.spaceship.size / 2 : this.lastTouchX;
@@ -390,6 +393,7 @@ class GameManager {
 
 
     handleMousePressed() {
+        
         if (mouseButton === LEFT) {
             if (this.gameState === "gameOver" && millis() - this.gameOverTime > 1000) { // Added this line
                 this.resetGame();
@@ -399,6 +403,7 @@ class GameManager {
             if (this.gameState === "title") {
                 this.gameState = "transition";
                 this.transitionTime = millis();
+                this.mouseUsed = true;
             }
     
         }
@@ -414,6 +419,7 @@ class GameManager {
             if (this.gameState === "title") {
                 this.gameState = "transition";
                 this.transitionTime = millis();
+                this.mouseUsed = true;
             }
     
         }
