@@ -197,7 +197,7 @@ class GameManager {
     updateSpaceshipPosition() {
         if (touches.length > 0) { // Si l'utilisateur touche l'écran (smartphone)
             this.spaceship.x = touches[0].x - this.spaceship.size / 2;
-            this.spaceship.y = touches[0].y + 50 - this.spaceship.size / 2;
+            this.spaceship.y = touches[0].y - 60 - this.spaceship.size / 2;
         } else { // Si l'utilisateur utilise la souris (PC de bureau)
             this.spaceship.x = mouseX - this.spaceship.size / 2;
             this.spaceship.y = mouseY - this.spaceship.size / 2;
@@ -205,16 +205,6 @@ class GameManager {
         this.spaceship.x = constrain(this.spaceship.x, 0, width - this.spaceship.size);
         this.spaceship.y = constrain(this.spaceship.y, 0, height - this.spaceship.size);
     };
-
-    fireBulletIfNeeded() {
-        // Si le bouton de la souris est pressé et que le temps écoulé depuis le dernier tir est supérieur au taux de tir, tire une balle
-        let currentTime = millis();
-        if (mouseIsPressed && mouseButton === LEFT && currentTime - this.lastFireTime >= this.fireRate) {
-            let bullet = new Bullet(this.spaceship.x + this.spaceship.size / 2, this.spaceship.y + this.spaceship.size / 2, 0, -1);
-            this.bullets.push(bullet);
-            this.lastFireTime = currentTime;
-        }
-    }
 
     updateSpaceshipLives() {
         // Decrement spaceship's lives
@@ -231,6 +221,16 @@ class GameManager {
         // Add the explosion to the list of explosions
         this.explosions.push(explosion);
     };
+
+    fireBulletIfNeeded() {
+        // Si le bouton de la souris est pressé et que le temps écoulé depuis le dernier tir est supérieur au taux de tir, tire une balle
+        let currentTime = millis();
+        if (mouseIsPressed && mouseButton === LEFT && currentTime - this.lastFireTime >= this.fireRate) {
+            let bullet = new Bullet(this.spaceship.x + this.spaceship.size / 2, this.spaceship.y + this.spaceship.size / 2, 0, -1);
+            this.bullets.push(bullet);
+            this.lastFireTime = currentTime;
+        }
+    }
 
     handleEnemyBullets(){
         for (let i = 0; i < this.enemies.length; i++) {
