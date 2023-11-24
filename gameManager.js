@@ -198,7 +198,7 @@ class GameManager {
         // Si l'utilisateur touche l'écran (smartphone)
         if (touches.length > 0 && touches[0] !== undefined) { // Ajout de la vérification touches[0] !== undefined
             this.spaceship.x = touches[0].x - this.spaceship.size / 2;
-            this.spaceship.y = touches[0].y - this.spaceship.size / 2;
+            this.spaceship.y = touches[0].y - 60 - this.spaceship.size / 2;
         } else if (touches.length === 0) { // Si l'utilisateur utilise la souris (PC de bureau)
             this.spaceship.x = mouseX - this.spaceship.size / 2;
             this.spaceship.y = mouseY - this.spaceship.size / 2;
