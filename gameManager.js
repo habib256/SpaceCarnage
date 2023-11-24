@@ -4,6 +4,7 @@ class GameManager {
         this.enemyImages = enemyImages;
         this.bgImages = bgImages;
         this.bgImageIndex = 0; 
+        this.bg = bgImages[this.bgImageIndex];
         this.explosionImages = explosionImages; // Changed from this.ExplosionsImages
         this.gameState = "title"; // can be "title", "game", "gameOver", "transition"
         this.enemyBullets = [];
@@ -32,7 +33,7 @@ class GameManager {
         this.explosions = [];
         this.score = 0;
         this.keys = {};
-        this.bg = this.bgImages[this.bgImageIndex % this.bgImages.length];
+        this.bg = this.bgImages[0];
         this.powerUps = [];
         this.wave = 1; 
         this.transitionTime = millis();
@@ -171,8 +172,6 @@ class GameManager {
             this.gameOver = true;
             this.gameState = "gameOver";
             this.gameOverTime = millis();
-            this.bgImageIndex = 0;
-            this.bg = this.bgImages[this.bgImageIndex];
         }
     };
 
@@ -188,18 +187,18 @@ class GameManager {
             this.gameState = "gameOver";
             // Record the time when the game ends
             this.gameOverTime = millis();
+             // Si la vague est la première, réinitialise l'index de l'image de fond
+            this.bgImageIndex = 0; 
+
         }   
         // Move to game state after a certain delay
         if (millis() - this.transitionTime >= 2000) { // Changed from this.gameOverTime
             this.gameState = "game";
-            // Si la vague est la première, réinitialise l'index de l'image de fond
-            if (this.wave === 0) {
-            this.bgImageIndex = 0; 
-            }
             // Si la vague est un multiple de 5, change l'image de fond
             if (this.wave % 5 === 0) { 
             // Incrementer l'index de l'image de fond et mettre à jour l'image de fond
-             this.bgImageIndex = (this.bgImageIndex + 1) % this.bgImages.length;
+
+             this.bgImageIndex ++;
              this.bg = this.bgImages[this.bgImageIndex];
             }  
             // Réinitialiser les variables pour la prochaine vague
@@ -210,13 +209,13 @@ class GameManager {
     };
 
     updateSpaceshipPosition() {
-        if (touches.length > 0 && touches[0] !== undefined) {
+        if (touches.length > 0 && touches[0] !== undefined && this.mouseUsed) {
             this.spaceship.x = touches[0].x - this.spaceship.size / 2;
             this.spaceship.y = touches[0].y - 60 - this.spaceship.size / 2;
             // Mettez à jour lastTouchX et lastTouchY chaque fois que vous touchez l'écran
             this.lastTouchX = this.spaceship.x;
             this.lastTouchY = this.spaceship.y;
-        } else if (this.mouseUsed) {
+        } else {
             // Si l'utilisateur utilise un PC, suivez la position de la souris
             // Si l'utilisateur utilise un smartphone, restez à la dernière position du toucher
             this.spaceship.x = mouseX ? mouseX - this.spaceship.size / 2 : this.lastTouchX;
@@ -419,7 +418,6 @@ class GameManager {
             if (this.gameState === "title") {
                 this.gameState = "transition";
                 this.transitionTime = millis();
-                this.mouseUsed = true;
             }
     
         }
@@ -448,4 +446,5 @@ class GameManager {
         this.gameState = "game";
     }
 }
+
 
