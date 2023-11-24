@@ -209,17 +209,15 @@ class GameManager {
     };
 
     updateSpaceshipPosition() {
-        if (touches.length > 0 && touches[0] !== undefined && this.mouseUsed) {
+        // Si l'utilisateur utilise un smartphone, restez à la dernière position du toucher
+        if (touches.length > 0 && touches[0] !== undefined ) {
             this.spaceship.x = touches[0].x - this.spaceship.size / 2;
             this.spaceship.y = touches[0].y - 60 - this.spaceship.size / 2;
             // Mettez à jour lastTouchX et lastTouchY chaque fois que vous touchez l'écran
-            this.lastTouchX = this.spaceship.x;
-            this.lastTouchY = this.spaceship.y;
         } else {
             // Si l'utilisateur utilise un PC, suivez la position de la souris
-            // Si l'utilisateur utilise un smartphone, restez à la dernière position du toucher
-            this.spaceship.x = mouseX ? mouseX - this.spaceship.size / 2 : this.lastTouchX;
-            this.spaceship.y = mouseY ? mouseY - this.spaceship.size / 2 : this.lastTouchY;
+            this.spaceship.x = mouseX - this.spaceship.size / 2 ;
+            this.spaceship.y = mouseY - this.spaceship.size / 2 ;
         }
         this.spaceship.x = constrain(this.spaceship.x, 0, width - this.spaceship.size);
         this.spaceship.y = constrain(this.spaceship.y, 0, height - this.spaceship.size);
@@ -355,13 +353,16 @@ class GameManager {
                         if (this.enemies[j] instanceof Boss) {
                             this.score += 25; 
                             powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 32, powerupImages[1]); 
+                            this.powerUps.push(powerUp);
                         } else {
                             this.score += 5; 
-                            // Créer un power-up à la position de l'ennemi
-                            powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 16, powerupImages[0]); 
+                            // Créer un power-up à la position de l'ennemi seulement la moitié du temps
+                            if (Math.random() < 0.4) {
+                                powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 16, powerupImages[0]); 
+                                // Ajouter le power-up à la liste des power-ups
+                                this.powerUps.push(powerUp);
+                            }
                         }
-                        // Ajouter le power-up à la liste des power-ups
-                        this.powerUps.push(powerUp);   
                         this.enemies.splice(j, 1);
                     }
                     // Détruire la balle
