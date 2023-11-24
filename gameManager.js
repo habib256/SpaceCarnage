@@ -1,8 +1,9 @@
 class GameManager {
-    constructor(spaceshipImages, enemyImages, bgImages, explosionImages, powerupImages) {
+    constructor(spaceshipImages, enemyImages, bgImages, explosionImages, powerupImages,titleImage) {
         this.spaceshipImages = spaceshipImages;
         this.enemyImages = enemyImages;
         this.bgImages = bgImages;
+        this.bgImageIndex = 0; 
         this.explosionImages = explosionImages; // Changed from this.ExplosionsImages
         this.gameState = "title"; // can be "title", "game", "gameOver", "transition"
         this.enemyBullets = [];
@@ -30,7 +31,7 @@ class GameManager {
         this.explosions = [];
         this.score = 0;
         this.keys = {};
-        this.bg = random(this.bgImages);
+        this.bg = this.bgImages[this.bgImageIndex % this.bgImages.length];
         this.powerUps = [];
         this.wave = 1; 
         this.transitionTime = millis();
@@ -42,9 +43,12 @@ class GameManager {
         fill(255);
         textSize(40);
         let titleText = "Spaceship Carnage";
-        let pressKeyText = "Press any key to start";
+        let pressKeyText = "Click to start";
         text(titleText, (width - textWidth(titleText)) / 2, 50);
         text(pressKeyText, (width - textWidth(pressKeyText)) / 2, 90);
+        image(titleImage, (width - titleImage.width) / 2, 100); // Ajoutez cette ligne à la fin de la fonction drawTitle()
+        let tapText = "Tap for Fullscreen";
+        text(tapText, (width - textWidth(tapText)) / 2, 140 +titleImage.height);
     };
 
     drawUI() {
@@ -185,9 +189,15 @@ class GameManager {
         // Move to game state after a certain delay
         if (millis() - this.transitionTime >= 2000) { // Changed from this.gameOverTime
             this.gameState = "game";
+            // Si la vague est la première, réinitialise l'index de l'image de fond
+            if (this.wave === 0) {
+            this.bgImageIndex = 0; 
+            }
             // Si la vague est un multiple de 5, change l'image de fond
             if (this.wave % 5 === 0) { 
-                this.bg = random(this.bgImages);
+            // Incrementer l'index de l'image de fond et mettre à jour l'image de fond
+             this.bgImageIndex = (this.bgImageIndex + 1) % this.bgImages.length;
+             this.bg = this.bgImages[this.bgImageIndex];
             }  
             // Réinitialiser les variables pour la prochaine vague
             this.enemiesCreated = false;
@@ -203,7 +213,7 @@ class GameManager {
             // Mettez à jour lastTouchX et lastTouchY chaque fois que vous touchez l'écran
             this.lastTouchX = this.spaceship.x;
             this.lastTouchY = this.spaceship.y;
-        } else if (touches.length === 0) {
+        } else {
             // Si l'utilisateur utilise un PC, suivez la position de la souris
             // Si l'utilisateur utilise un smartphone, restez à la dernière position du toucher
             this.spaceship.x = mouseX ? mouseX - this.spaceship.size / 2 : this.lastTouchX;
@@ -341,7 +351,7 @@ class GameManager {
                         let powerUp;
                         // Augmenter le score
                         if (this.enemies[j] instanceof Boss) {
-                            this.score += 20; 
+                            this.score += 25; 
                             powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 32, powerupImages[1]); 
                         } else {
                             this.score += 5; 
