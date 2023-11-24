@@ -34,11 +34,11 @@ function draw() {
 }
 
 function touchStarted() {
-    gameManager.handleMousePressed();
+    gameManager.handleTouchPressed();
 }
 
 function touchEnded() {
-    gameManager.handleMouseReleased();
+    gameManager.handleTouchReleased();
 }
 
 function mousePressed() {

@@ -124,7 +124,7 @@ class GameManager {
             strokeWeight(5);
             fill(255);
             textSize(24);
-            text("SpaceShip: " + this.spaceship.lives, 5, 50); // Ajoutez cette ligne
+            text("Ship: " + this.spaceship.lives, 5, 50); // Ajoutez cette ligne
     };
 
     manageGame() {
@@ -194,9 +194,16 @@ class GameManager {
 
     };
 
-    updateSpaceshipPosition(){
-        this.spaceship.x = constrain(mouseX - this.spaceship.size / 2, 0, width - this.spaceship.size);
-        this.spaceship.y = constrain(mouseY - this.spaceship.size / 2, 0, height - this.spaceship.size);
+    updateSpaceshipPosition() {
+        if (touches.length > 0) { // Si l'utilisateur touche l'écran (smartphone)
+            this.spaceship.x = touches[0].x - this.spaceship.size / 2;
+            this.spaceship.y = touches[0].y + 50 - this.spaceship.size / 2;
+        } else { // Si l'utilisateur utilise la souris (PC de bureau)
+            this.spaceship.x = mouseX - this.spaceship.size / 2;
+            this.spaceship.y = mouseY - this.spaceship.size / 2;
+        }
+        this.spaceship.x = constrain(this.spaceship.x, 0, width - this.spaceship.size);
+        this.spaceship.y = constrain(this.spaceship.y, 0, height - this.spaceship.size);
     };
 
     fireBulletIfNeeded() {
@@ -379,9 +386,24 @@ class GameManager {
     
         }
     }
+    
+    handleTouchPressed() {
+        if (mouseButton === LEFT) {
+            if (this.gameState === "gameOver" && millis() - this.gameOverTime > 1000) { // Added this line
+                this.resetGame();
+                this.gameState = "transition";
+                this.transitionTime = millis();
+            }
+            if (this.gameState === "title") {
+                this.gameState = "transition";
+                this.transitionTime = millis();
+            }
+    
+        }
+    }
 
 
-    handleMouseReleased() {
+    handleTouchReleased() {
         if (this.gameState === "game") {
             this.spaceship.stopFiring();
         }
