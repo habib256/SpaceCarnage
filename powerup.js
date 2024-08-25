@@ -4,7 +4,13 @@ class PowerUp {
         this.y = y+32;
         this.size = size;
         this.image = image;
-        this.rotation = 0;
+        this.type = this.getRandomType();
+        this.duration = 5000; // Durée de 5 secondes pour les effets temporaires
+    }
+
+    getRandomType() {
+        const types = ['doubleShot', 'speedBoost', 'shield', 'pointsMultiplier'];
+        return random(types);
     }
 
     show() {
@@ -35,5 +41,22 @@ class PowerUp {
     collidesWith(other) {
         let d = dist(this.x + this.size / 2, this.y + this.size / 2, other.x + other.size / 2, other.y + other.size / 2);
         return (d < this.size / 2 + other.size / 2);
+    }
+
+    applyEffect(spaceship, gameManager) {
+        switch(this.type) {
+            case 'doubleShot':
+                spaceship.enableDoubleShot(this.duration);
+                break;
+            case 'speedBoost':
+                spaceship.boostSpeed(this.duration);
+                break;
+            case 'shield':
+                spaceship.activateShield(this.duration);
+                break;
+            case 'pointsMultiplier':
+                gameManager.activatePointsMultiplier(this.duration);
+                break;
+        }
     }
 }

@@ -7,11 +7,19 @@ class Spaceship {
         this.speed = 10;
         this.xdir = 0;
         this.ydir = 0;
-        this.lives = 3; // Added this line
+        this.lives = 3;
+        this.doubleShotEnabled = false;
+        this.shieldActive = false;
+        this.normalSpeed = this.speed;
     }
 
     show() {
         image(this.image, this.x, this.y, this.size, this.size);
+        if (this.shieldActive) {
+            noFill();
+            stroke(0, 255, 255);
+            ellipse(this.x + this.size/2, this.y + this.size/2, this.size * 1.2);
+        }
     }
 
     move() {
@@ -47,10 +55,27 @@ class Spaceship {
     }
 
     collidesWith(other) {
+        if (this.shieldActive) return false;
         let d = dist(this.x + this.size / 2, this.y + this.size / 2, other.x + other.size / 2, other.y + other.size / 2);
         return (d < this.size / 4 + other.size / 2);
     }
+
     stopFiring() {
         this.firing = false;
+    }
+
+    enableDoubleShot(duration) {
+        this.doubleShotEnabled = true;
+        setTimeout(() => this.doubleShotEnabled = false, duration);
+    }
+
+    boostSpeed(duration) {
+        this.speed = this.normalSpeed * 1.5;
+        setTimeout(() => this.speed = this.normalSpeed, duration);
+    }
+
+    activateShield(duration) {
+        this.shieldActive = true;
+        setTimeout(() => this.shieldActive = false, duration);
     }
 }

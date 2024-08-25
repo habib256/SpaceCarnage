@@ -16,6 +16,7 @@ class GameManager {
         this.enemiesCreated = false; 
         this.powerUps = []; 
         this.bossCreated = false; 
+        this.pointsMultiplier = 1; // Added this line
         this.resetGame();
     };
 
@@ -356,8 +357,7 @@ class GameManager {
             // Si le vaisseau spatial entre en collision avec un power-up
             if (this.spaceship.collidesWith(this.powerUps[i])) {
                 // Appliquer l'effet du power-up
-               this.score += 20;
-
+                this.powerUps[i].applyEffect(this.spaceship, this);
                 // Supprimer le power-up
                 this.powerUps.splice(i, 1);
             }
@@ -401,5 +401,16 @@ class GameManager {
     resumeGame() {
         // Code to resume the game
         this.gameState = "game";
+    }
+
+    activatePointsMultiplier(duration) {
+        this.pointsMultiplier = 2;
+        setTimeout(() => {
+            this.pointsMultiplier = 1;
+        }, duration);
+    }
+
+    updateScore(points) {
+        this.score += points * this.pointsMultiplier;
     }
 }
