@@ -7,18 +7,19 @@ let powerupImages = [];
 let gameManager;
 let coinImage;
 let dollarImage;
+let titleImage; // Added this line
 
 function preload() {
     loadSpaceShipImages();
     loadBackgroundImages();
     loadEnemyImages();
     loadExplosionImage();
-    powerupImages = loadPowerupImage();
+    loadPowerupImage(); // Added this line
 }
 
 function setup() {
     createCanvas(min(windowWidth-25, 1024), min(windowHeight-25, 1024));
-    gameManager = new GameManager(spaceshipImages, enemyImages, bgImages, explosionImages, powerupImages);
+    gameManager = new GameManager(spaceshipImages, enemyImages, bgImages, explosionImages, powerupImages); // Added powerupImages as an argument
     noCursor();
     frameRate(30); // Définit la vitesse d'affichage à 30 fps
     if (isMobileDevice()) {
@@ -34,11 +35,11 @@ function draw() {
 }
 
 function touchStarted() {
-    gameManager.handleMousePressed();
+    gameManager.handleTouchPressed();
 }
 
 function touchEnded() {
-    gameManager.handleMouseReleased();
+    gameManager.handleTouchReleased();
 }
 
 function mousePressed() {

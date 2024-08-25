@@ -7,10 +7,7 @@ class Spaceship {
         this.speed = 10;
         this.xdir = 0;
         this.ydir = 0;
-        this.lives = 3;
-        this.doubleShotEnabled = false;
-        this.shieldActive = false;
-        this.normalSpeed = this.speed;
+        this.lives = 3; // Added this line
     }
 
     show() {

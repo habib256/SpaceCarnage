@@ -1,14 +1,18 @@
 class GameManager {
-    constructor(spaceshipImages, enemyImages, bgImages, explosionImages, powerupImages) {
+    constructor(spaceshipImages, enemyImages, bgImages, explosionImages, powerupImages,titleImage) {
         this.spaceshipImages = spaceshipImages;
         this.enemyImages = enemyImages;
         this.bgImages = bgImages;
+        this.bgImageIndex = 0; 
+        this.bg = bgImages[this.bgImageIndex];
         this.explosionImages = explosionImages; // Changed from this.ExplosionsImages
         this.gameState = "title"; // can be "title", "game", "gameOver", "transition"
         this.enemyBullets = [];
         this.explosions = [];
         this.gameOver = false;
         this.pauseGame = true;
+        this.lastTouchX = 0;
+        this.lastTouchY = 0;
         this.fireRate = 150; // 150 milliseconds = 0.1 seconds
         this.lastFireTime = 0;
         this.gameOverTime = 0; 
@@ -16,7 +20,6 @@ class GameManager {
         this.enemiesCreated = false; 
         this.powerUps = []; 
         this.bossCreated = false; 
-        this.pointsMultiplier = 1; // Added this line
         this.resetGame();
     };
 
@@ -29,7 +32,7 @@ class GameManager {
         this.explosions = [];
         this.score = 0;
         this.keys = {};
-        this.bg = random(this.bgImages);
+        this.bg = this.bgImages[0];
         this.powerUps = [];
         this.wave = 1; 
         this.transitionTime = millis();
@@ -41,9 +44,12 @@ class GameManager {
         fill(255);
         textSize(40);
         let titleText = "Spaceship Carnage";
-        let pressKeyText = "Press any key to start";
+        let pressKeyText = "Click to start";
         text(titleText, (width - textWidth(titleText)) / 2, 50);
         text(pressKeyText, (width - textWidth(pressKeyText)) / 2, 90);
+        image(titleImage, (width - titleImage.width) / 2, 100); // Ajoutez cette ligne à la fin de la fonction drawTitle()
+        let tapText = "Tap for Fullscreen";
+        text(tapText, (width - textWidth(tapText)) / 2, 140 +titleImage.height);
     };
 
     drawUI() {
@@ -125,7 +131,7 @@ class GameManager {
             strokeWeight(5);
             fill(255);
             textSize(24);
-            text("SpaceShip: " + this.spaceship.lives, 5, 50); // Ajoutez cette ligne
+            text("Ship: " + this.spaceship.lives, 5, 50); // Ajoutez cette ligne
     };
 
     manageGame() {
@@ -180,13 +186,19 @@ class GameManager {
             this.gameState = "gameOver";
             // Record the time when the game ends
             this.gameOverTime = millis();
+             // Si la vague est la première, réinitialise l'index de l'image de fond
+            this.bgImageIndex = 0; 
+
         }   
         // Move to game state after a certain delay
         if (millis() - this.transitionTime >= 2000) { // Changed from this.gameOverTime
             this.gameState = "game";
             // Si la vague est un multiple de 5, change l'image de fond
             if (this.wave % 5 === 0) { 
-                this.bg = random(this.bgImages);
+            // Incrementer l'index de l'image de fond et mettre à jour l'image de fond
+
+             this.bgImageIndex ++;
+             this.bg = this.bgImages[this.bgImageIndex];
             }  
             // Réinitialiser les variables pour la prochaine vague
             this.enemiesCreated = false;
@@ -195,20 +207,20 @@ class GameManager {
 
     };
 
-    updateSpaceshipPosition(){
-        this.spaceship.x = constrain(mouseX - this.spaceship.size / 2, 0, width - this.spaceship.size);
-        this.spaceship.y = constrain(mouseY - this.spaceship.size / 2, 0, height - this.spaceship.size);
-    };
-
-    fireBulletIfNeeded() {
-        // Si le bouton de la souris est pressé et que le temps écoulé depuis le dernier tir est supérieur au taux de tir, tire une balle
-        let currentTime = millis();
-        if (mouseIsPressed && mouseButton === LEFT && currentTime - this.lastFireTime >= this.fireRate) {
-            let bullet = new Bullet(this.spaceship.x + this.spaceship.size / 2, this.spaceship.y + this.spaceship.size / 2, 0, -1);
-            this.bullets.push(bullet);
-            this.lastFireTime = currentTime;
+    updateSpaceshipPosition() {
+        // Si l'utilisateur utilise un smartphone, restez à la dernière position du toucher
+        if (touches.length > 0 && touches[0] !== undefined ) {
+            this.spaceship.x = touches[0].x - this.spaceship.size / 2;
+            this.spaceship.y = touches[0].y - 60 - this.spaceship.size / 2;
+            // Mettez à jour lastTouchX et lastTouchY chaque fois que vous touchez l'écran
+        } else {
+            // Si l'utilisateur utilise un PC, suivez la position de la souris
+            this.spaceship.x = mouseX - this.spaceship.size / 2 ;
+            this.spaceship.y = mouseY - this.spaceship.size / 2 ;
         }
-    }
+        this.spaceship.x = constrain(this.spaceship.x, 0, width - this.spaceship.size);
+        this.spaceship.y = constrain(this.spaceship.y, 0, height - this.spaceship.size);
+    };
 
     updateSpaceshipLives() {
         // Decrement spaceship's lives
@@ -225,6 +237,16 @@ class GameManager {
         // Add the explosion to the list of explosions
         this.explosions.push(explosion);
     };
+
+    fireBulletIfNeeded() {
+        // Si le bouton de la souris est pressé et que le temps écoulé depuis le dernier tir est supérieur au taux de tir, tire une balle
+        let currentTime = millis();
+        if (mouseIsPressed && mouseButton === LEFT && currentTime - this.lastFireTime >= this.fireRate) {
+            let bullet = new Bullet(this.spaceship.x + this.spaceship.size / 2, this.spaceship.y + this.spaceship.size / 2, 0, -1);
+            this.bullets.push(bullet);
+            this.lastFireTime = currentTime;
+        }
+    }
 
     handleEnemyBullets(){
         for (let i = 0; i < this.enemies.length; i++) {
@@ -328,15 +350,18 @@ class GameManager {
                         let powerUp;
                         // Augmenter le score
                         if (this.enemies[j] instanceof Boss) {
-                            this.score += 20; 
+                            this.score += 25; 
                             powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 32, powerupImages[1]); 
+                            this.powerUps.push(powerUp);
                         } else {
                             this.score += 5; 
-                            // Créer un power-up à la position de l'ennemi
-                            powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 16, powerupImages[0]); 
+                            // Créer un power-up à la position de l'ennemi seulement la moitié du temps
+                            if (Math.random() < 0.4) {
+                                powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 16, powerupImages[0]); 
+                                // Ajouter le power-up à la liste des power-ups
+                                this.powerUps.push(powerUp);
+                            }
                         }
-                        // Ajouter le power-up à la liste des power-ups
-                        this.powerUps.push(powerUp);   
                         this.enemies.splice(j, 1);
                     }
                     // Détruire la balle
@@ -366,6 +391,23 @@ class GameManager {
 
 
     handleMousePressed() {
+        
+        if (mouseButton === LEFT) {
+            if (this.gameState === "gameOver" && millis() - this.gameOverTime > 1000) { // Added this line
+                this.resetGame();
+                this.gameState = "transition";
+                this.transitionTime = millis();
+            }
+            if (this.gameState === "title") {
+                this.gameState = "transition";
+                this.transitionTime = millis();
+                this.mouseUsed = true;
+            }
+    
+        }
+    }
+    
+    handleTouchPressed() {
         if (mouseButton === LEFT) {
             if (this.gameState === "gameOver" && millis() - this.gameOverTime > 1000) { // Added this line
                 this.resetGame();
@@ -381,7 +423,7 @@ class GameManager {
     }
 
 
-    handleMouseReleased() {
+    handleTouchReleased() {
         if (this.gameState === "game") {
             this.spaceship.stopFiring();
         }
@@ -414,3 +456,5 @@ class GameManager {
         this.score += points * this.pointsMultiplier;
     }
 }
+
+
