@@ -90,10 +90,13 @@ function loadExplosionImage() {
 }
 
 function loadPowerupImage() {
-    for (let i = 0; i <= 3; i++) {
-        let powerupImage = loadImage(`images/PowerUp${String(i).padStart(2, '0')}.png`);
-        powerupImages.push(powerupImage);
-    }
+    powerupImages = {
+        shield: loadImage('images/PowerUp00.png'),
+        extraLife: loadImage('images/PowerUp01.png'),
+        pointsMultiplier: loadImage('images/PowerUp02.png'),
+        doubleShot: loadImage('images/PowerUp03.png'),
+        speedBoost: loadImage('images/PowerUp04.png')
+    };
 }
 
 function isMobileDevice() {

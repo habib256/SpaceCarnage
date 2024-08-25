@@ -7,7 +7,10 @@ class Spaceship {
         this.speed = 10;
         this.xdir = 0;
         this.ydir = 0;
-        this.lives = 3; // Added this line
+        this.lives = 3;
+        this.shieldActive = false; // Initialisation explicite
+        this.shieldTimeout = null;
+        this.normalSpeed = this.speed; // Stockez la vitesse normale
     }
 
     show() {
@@ -73,6 +76,45 @@ class Spaceship {
 
     activateShield(duration) {
         this.shieldActive = true;
-        setTimeout(() => this.shieldActive = false, duration);
+        if (this.shieldTimeout) {
+            clearTimeout(this.shieldTimeout);
+        }
+        this.shieldTimeout = setTimeout(() => {
+            this.shieldActive = false;
+            this.shieldTimeout = null;
+        }, duration);
+    }
+
+    deactivateShield() {
+        this.shieldActive = false;
+        if (this.shieldTimeout) {
+            clearTimeout(this.shieldTimeout);
+            this.shieldTimeout = null;
+        }
+    }
+
+    activateSpeedBoost(duration) {
+        this.speed = this.normalSpeed * 2; // Doublez la vitesse normale
+        setTimeout(() => {
+            this.speed = this.normalSpeed; // Rétablissez la vitesse normale après la durée spécifiée
+        }, duration);
+    }
+
+    activateDoubleShot(duration) {
+        this.doubleShotActive = true;
+        setTimeout(() => {
+            this.doubleShotActive = false;
+        }, duration);
+    }
+
+    reflectBullet(bullet) {
+        if (this.shieldActive) {
+            // Inverser la direction de la balle
+            bullet.dy *= -1;
+            // Ajuster légèrement la position de la balle pour éviter une collision immédiate
+            bullet.y = this.y - this.size / 2 - bullet.size;
+            return true;
+        }
+        return false;
     }
 }

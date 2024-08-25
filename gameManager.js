@@ -21,6 +21,7 @@ class GameManager {
         this.powerUps = []; 
         this.bossCreated = false; 
         this.titleImage = titleImage;
+        this.powerupImages = powerupImages; // Added this line
         this.resetGame();
     };
 
@@ -308,81 +309,70 @@ class GameManager {
     };
 
     checkSpaceshipCollisions() {
-        // Check for collisions between the spaceship and all enemies
+        // Vérification des collisions avec les ennemis
         for (let i = this.enemies.length - 1; i >= 0; i--) {
-            // If the spaceship collides with an enemy
             if (this.spaceship.collidesWith(this.enemies[i])) {
-                this.updateSpaceshipLives();
-                this.enemies.splice(i, 1);
+                if (!this.spaceship.shieldActive) {
+                    this.updateSpaceshipLives();
+                    this.enemies.splice(i, 1);
+                }
                 break;
             }
         }
 
-        // Check for collisions between the spaceship and all enemy bullets
+        // Vérification des collisions avec les balles ennemies
         for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
-
-            // Si le vaisseau spatial entre en collision avec une balle ennemie
             if (this.spaceship.collidesWith(this.enemyBullets[i])) {
-                this.updateSpaceshipLives();
-                // Mark the enemy bullet for deletion
-                this.enemyBullets.splice(i, 1);
+                if (this.spaceship.reflectBullet(this.enemyBullets[i])) {
+                    // La balle a été réfléchie, on la transforme en balle du joueur
+                    this.bullets.push(this.enemyBullets[i]);
+                    this.enemyBullets.splice(i, 1);
+                } else {
+                    this.updateSpaceshipLives();
+                    this.enemyBullets.splice(i, 1);
+                }
                 break;
             }
-
-            // Si la balle ennemie est hors de l'écran
-            if (this.enemyBullets[i].offScreen()) {
-                this.enemyBullets.splice(i, 1);
-            }
         }
+
+        // Supprimer les balles ennemies hors de l'écran
+        this.enemyBullets = this.enemyBullets.filter(bullet => !bullet.offScreen());
     };
 
     checkBulletsCollisions() {
-        // Check for collisions between all spaceship bullets and all enemies
-        for (let i = this.bullets.length - 1; i >= 0; i--) { 
-            // Parcourir tous les ennemis
+        for (let i = this.bullets.length - 1; i >= 0; i--) {
             for (let j = this.enemies.length - 1; j >= 0; j--) {
-                // Si une balle touche un ennemi
                 if (this.bullets[i].hits(this.enemies[j])) {
-                    // Décrémenter la santé de l'ennemi
                     this.enemies[j].health--;
-                    // Si l'ennemi est un boss, le faire clignoter
                     if (this.enemies[j] instanceof Boss) {
                         this.enemies[j].flashing = true;
                     }
-                    // Si la santé de l'ennemi atteint 0, le détruire
                     if (this.enemies[j].health <= 0) {
-                        // Créer une explosion à la position de l'ennemi
                         let explosion = new Explosion(this.enemies[j].x, this.enemies[j].y, this.enemies[j].size, this.explosionImages);
-                        // Ajouter l'explosion à la liste des explosions
                         this.explosions.push(explosion);
                         let powerUp;
-                        // Augmenter le score
                         if (this.enemies[j] instanceof Boss) {
-                            this.score += 25; 
-                            powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 32, powerupImages[1]); 
+                            this.score += 25;
+                            powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 32, this.powerupImages);
                             this.powerUps.push(powerUp);
                         } else {
-                            this.score += 5; 
-                            // Créer un power-up à la position de l'ennemi seulement la moitié du temps
+                            this.score += 5;
                             if (Math.random() < 0.4) {
-                                powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 16, powerupImages[0]); 
-                                // Ajouter le power-up à la liste des power-ups
+                                powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 16, this.powerupImages);
                                 this.powerUps.push(powerUp);
                             }
                         }
                         this.enemies.splice(j, 1);
                     }
-                    // Détruire la balle
                     this.bullets[i].destroy();
                 }
             }
 
-            // Si la balle est hors de l'écran ou marquée pour suppression
-            if (this.bullets[i].y < 0 || this.bullets[i].toDelete) {
+            if (this.bullets[i].y < 0 || this.bullets[i].y > height || this.bullets[i].toDelete) {
                 this.bullets.splice(i, 1);
             }
         }
-    };
+    }
 
     checkPowerUpsCollisions() {
         // Parcourir tous les power-ups
@@ -390,13 +380,36 @@ class GameManager {
             // Si le vaisseau spatial entre en collision avec un power-up
             if (this.spaceship.collidesWith(this.powerUps[i])) {
                 // Appliquer l'effet du power-up
-                this.powerUps[i].applyEffect(this.spaceship, this);
+                this.applyPowerUpEffect(this.powerUps[i]);
                 // Supprimer le power-up
                 this.powerUps.splice(i, 1);
             }
         }
     };
 
+    applyPowerUpEffect(powerUp) {
+        console.log(`Power-up récupéré : ${powerUp.type}`);
+        
+        switch(powerUp.type) {
+            case 'shield':
+                this.spaceship.activateShield(5000);
+                break;
+            case 'extraLife':
+                this.spaceship.lives++;
+                break;
+            case 'pointsMultiplier':
+                this.activatePointsMultiplier(10000);
+                break;
+            case 'doubleShot':
+                this.spaceship.activateDoubleShot(7000);
+                break;
+            case 'speedBoost':
+                this.spaceship.activateSpeedBoost(6000);
+                break;
+            default:
+                console.log(`Type de power-up inconnu : ${powerUp.type}`);
+        }
+    }
 
     handleMousePressed() {
         
