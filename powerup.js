@@ -3,7 +3,7 @@ class PowerUp {
         this.x = x+32;
         this.y = y+32;
         this.size = size;
-        this.image = image;
+        this.image = image || null; // Utiliser null si l'image n'est pas définie
         this.type = this.getRandomType();
         this.duration = 5000; // Durée de 5 secondes pour les effets temporaires
     }
@@ -16,16 +16,17 @@ class PowerUp {
     show() {
         push();
         translate(this.x, this.y);
-        //rotate(this.rotation);
         imageMode(CENTER);
-        if (this.image.width > 0 && this.image.height > 0) {
+        if (this.image && this.image.width > 0 && this.image.height > 0) {
             this.image.resize(this.size, 0);
             image(this.image, 0, 0);
         } else {
-            console.log('Image not loaded');
+            // Dessinez un placeholder si l'image n'est pas chargée
+            fill(255, 0, 255);
+            noStroke();
+            ellipse(0, 0, this.size, this.size);
         }
         pop();
-        //this.rotation += 0.5; // Adjust this value to change the speed of rotation
     }
 
 
@@ -39,7 +40,7 @@ class PowerUp {
 
 
     collidesWith(other) {
-        let d = dist(this.x + this.size / 2, this.y + this.size / 2, other.x + other.size / 2, other.y + other.size / 2);
+        let d = dist(this.x + this.size / 2, this.y + this.size / 2, other.x + other.size / 2, other.y + this.size / 2);
         return (d < this.size / 2 + other.size / 2);
     }
 

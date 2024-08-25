@@ -14,12 +14,13 @@ function preload() {
     loadBackgroundImages();
     loadEnemyImages();
     loadExplosionImage();
-    loadPowerupImage(); // Added this line
+    loadPowerupImage();
+    titleImage = loadImage('images/Title.png'); // Load title image
 }
 
 function setup() {
     createCanvas(min(windowWidth-25, 1024), min(windowHeight-25, 1024));
-    gameManager = new GameManager(spaceshipImages, enemyImages, bgImages, explosionImages, powerupImages); // Added powerupImages as an argument
+    gameManager = new GameManager(spaceshipImages, enemyImages, bgImages, explosionImages, powerupImages, titleImage); // Added titleImage as an argument
     noCursor();
     frameRate(30); // Définit la vitesse d'affichage à 30 fps
     if (isMobileDevice()) {
@@ -47,8 +48,11 @@ function mousePressed() {
 }
 
 function keyPressed() {
-    gameManager.handleKeyPressed();
+    if (gameManager) {
+        gameManager.handleKeyPressed();
+    }
 }
+
 function windowResized() {
     resizeCanvas(min(windowWidth-25, 1024), min(windowHeight-25, 1024));
 }
@@ -86,12 +90,10 @@ function loadExplosionImage() {
 }
 
 function loadPowerupImage() {
-    let images = [];
     for (let i = 0; i <= 3; i++) {
         let powerupImage = loadImage(`images/PowerUp${String(i).padStart(2, '0')}.png`);
-        images.push(powerupImage);
+        powerupImages.push(powerupImage);
     }
-    return images;
 }
 
 function isMobileDevice() {

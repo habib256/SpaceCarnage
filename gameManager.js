@@ -1,5 +1,5 @@
 class GameManager {
-    constructor(spaceshipImages, enemyImages, bgImages, explosionImages, powerupImages,titleImage) {
+    constructor(spaceshipImages, enemyImages, bgImages, explosionImages, powerupImages, titleImage) {
         this.spaceshipImages = spaceshipImages;
         this.enemyImages = enemyImages;
         this.bgImages = bgImages;
@@ -20,6 +20,7 @@ class GameManager {
         this.enemiesCreated = false; 
         this.powerUps = []; 
         this.bossCreated = false; 
+        this.titleImage = titleImage;
         this.resetGame();
     };
 
@@ -47,9 +48,16 @@ class GameManager {
         let pressKeyText = "Click to start";
         text(titleText, (width - textWidth(titleText)) / 2, 50);
         text(pressKeyText, (width - textWidth(pressKeyText)) / 2, 90);
-        image(titleImage, (width - titleImage.width) / 2, 100); // Ajoutez cette ligne à la fin de la fonction drawTitle()
-        let tapText = "Tap for Fullscreen";
-        text(tapText, (width - textWidth(tapText)) / 2, 140 +titleImage.height);
+        
+        // Vérifiez si titleImage est défini avant de l'utiliser
+        if (this.titleImage && this.titleImage.width) {
+            image(this.titleImage, (width - this.titleImage.width) / 2, 100);
+            
+            let tapText = "Tap for Fullscreen";
+            text(tapText, (width - textWidth(tapText)) / 2, 140 + this.titleImage.height);
+        } else {
+            console.warn("L'image du titre n'est pas chargée ou n'a pas de largeur définie.");
+        }
     };
 
     drawUI() {
