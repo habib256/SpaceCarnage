@@ -2,6 +2,15 @@
 
 Toutes les modifications notables à ce projet seront documentées dans ce fichier.
 
+## [0.4.2] - 2023-11-23 - Power-Up Edition
+
+- Ajout de power-ups avec différents effets (bouclier, vie supplémentaire, multiplicateur de points, double tir, boost de vitesse).
+- Implémentation d'un système de pause du jeu.
+- Ajout d'un écran titre avec une image.
+- Amélioration du système de tir des boss avec un tir rotatif.
+- Optimisation des performances pour les appareils mobiles.
+- Ajout de la prise en charge du plein écran pour les appareils mobiles.
+
 ## [0.4.1] - 2023-11-22 - Factorisation Edition
 
 - Le code de gameManager.js a été totalement refactorisé pour augmenter la lisibilité.

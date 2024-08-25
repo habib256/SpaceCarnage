@@ -19,18 +19,17 @@ class Enemy {
         image(this.image, this.x, this.y, this.size, this.size);
     }
 
-    move() {
-        // Use Perlin noise to get new x and y coordinates
+    updatePositionWithPerlinNoise() {
         this.x = map(noise(this.xoff), 0, 1, 0, width);
-        this.y = map(noise(this.yoff), 0, 1, 0, 300); 
-
-        // Constrain y value
-        this.y = constrain(this.y, 0, height - 150); 
-
-        // Increment xoff and yoff
+        this.y = map(noise(this.yoff), 0, 1, 0, 300);
+        this.y = constrain(this.y, 0, height - 150);
         this.xoff += 0.01;
         this.yoff += 0.01;
-    } 
+    }
+
+    move() {
+        this.updatePositionWithPerlinNoise();
+    }
 
     collidesWith(other) {
         let d = dist(this.x + this.size / 2, this.y + this.size / 2, other.x + other.size / 2, other.y + other.size / 2);

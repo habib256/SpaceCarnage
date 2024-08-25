@@ -144,14 +144,16 @@ class GameManager {
     };
 
     manageGame() {
-        if (this.gameState === "title") {
-            this.drawTitle();
-        } else if (this.gameState === "game") {
-            this.handleGameLogic();
-        } else if (this.gameState === "transition") {
-            this.handleTransitionState();
-        } else if (this.gameState === "gameOver") {
-            this.handleGameOverState();
+        const gameStateHandlers = {
+            title: this.drawTitle,
+            game: this.handleGameLogic,
+            transition: this.handleTransitionState,
+            gameOver: this.handleGameOverState
+        };
+
+        const handler = gameStateHandlers[this.gameState];
+        if (handler) {
+            handler.call(this);
         }
         this.updateSpaceshipPosition();
         this.handleEnemyBullets();
@@ -350,17 +352,24 @@ class GameManager {
                     if (this.enemies[j].health <= 0) {
                         let explosion = new Explosion(this.enemies[j].x, this.enemies[j].y, this.enemies[j].size, this.explosionImages);
                         this.explosions.push(explosion);
-                        let powerUp;
-                        if (this.enemies[j] instanceof Boss) {
-                            this.score += 25;
-                            powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 32, this.powerupImages);
-                            this.powerUps.push(powerUp);
-                        } else {
-                            this.score += 5;
-                            if (Math.random() < 0.4) {
-                                powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 16, this.powerupImages);
+                        
+                        // Vérifier si le bouclier n'est pas actif avant de générer un power-up
+                        if (!this.spaceship.shieldActive) {
+                            let powerUp;
+                            if (this.enemies[j] instanceof Boss) {
+                                this.score += 25;
+                                powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 32, this.powerupImages);
                                 this.powerUps.push(powerUp);
+                            } else {
+                                this.score += 5;
+                                if (Math.random() < 0.4) {
+                                    powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 16, this.powerupImages);
+                                    this.powerUps.push(powerUp);
+                                }
                             }
+                        } else {
+                            // Si le bouclier est actif, ajoutez simplement le score sans générer de power-up
+                            this.score += (this.enemies[j] instanceof Boss) ? 25 : 5;
                         }
                         this.enemies.splice(j, 1);
                     }
