@@ -2,7 +2,7 @@ class PowerUp {
     constructor(x, y, size, images) {
         this.x = x+32;
         this.y = y+32;
-        this.size = size;
+        this.size = size*2;
         this.images = images;
         this.type = this.getRandomType();
         this.image = this.getImageForType(this.type);
@@ -11,10 +11,13 @@ class PowerUp {
 
     getRandomType() {
         const types = ['shield', 'extraLife', 'pointsMultiplier', 'doubleShot', 'speedBoost'];
-        return random(types);
+        return types[Math.floor(Math.random() * types.length)];
     }
 
     getImageForType(type) {
+        if (type === 'shield') {
+            return this.images['pointsMultiplier'];  // Utilise l'image PowerUp02.png pour le bouclier
+        }
         if (this.images && this.images[type]) {
             console.log(`Image chargée pour ${type}`);
             return this.images[type];

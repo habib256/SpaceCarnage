@@ -353,23 +353,18 @@ class GameManager {
                         let explosion = new Explosion(this.enemies[j].x, this.enemies[j].y, this.enemies[j].size, this.explosionImages);
                         this.explosions.push(explosion);
                         
-                        // Vérifier si le bouclier n'est pas actif avant de générer un power-up
-                        if (!this.spaceship.shieldActive) {
-                            let powerUp;
-                            if (this.enemies[j] instanceof Boss) {
-                                this.score += 25;
-                                powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 32, this.powerupImages);
-                                this.powerUps.push(powerUp);
-                            } else {
-                                this.score += 5;
-                                if (Math.random() < 0.4) {
-                                    powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 16, this.powerupImages);
-                                    this.powerUps.push(powerUp);
-                                }
-                            }
+                        // Supprimez la vérification du bouclier ici
+                        let powerUp;
+                        if (this.enemies[j] instanceof Boss) {
+                            this.score += 25;
+                            powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 32, this.powerupImages);
+                            this.powerUps.push(powerUp);
                         } else {
-                            // Si le bouclier est actif, ajoutez simplement le score sans générer de power-up
-                            this.score += (this.enemies[j] instanceof Boss) ? 25 : 5;
+                            this.score += 5;
+                            if (Math.random() < 0.4) {
+                                powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 16, this.powerupImages);
+                                this.powerUps.push(powerUp);
+                            }
                         }
                         this.enemies.splice(j, 1);
                     }
