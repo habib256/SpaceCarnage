@@ -20,9 +20,8 @@ class Boss extends Enemy {
             const dy = Math.sin(this.angle);
             const bullet = new Bullet(bulletX, bulletY, dx, dy);
             
-            // Ralentir la vitesse de déplacement de la balle
-            // Ici, on divise la vitesse par 2 (ou ajustez avec 3 pour un ralentissement plus marqué)
-            bullet.speed = bullet.speed ? bullet.speed / 4 : 8;
+            // Ralentir la vitesse de déplacement de la balle (divise par 8 au lieu de 4)
+            bullet.speed = bullet.speed ? bullet.speed / 8 : 4;
             
             this.angle += Math.PI / 8;
             this.lastFireTime = millis();
@@ -30,6 +29,22 @@ class Boss extends Enemy {
         }
         return null;
     }
+
+    move() {
+        // Enregistrer la position initiale
+        const previousX = this.x;
+        const previousY = this.y;
+
+        // Appeler la méthode move() de la classe parente pour appliquer la logique de déplacement standard
+        if (typeof super.move === "function") {
+            super.move();
+        }
+
+        // Ajuster le déplacement en ramenant la variation de position à la moitié
+        this.x = previousX + (this.x - previousX) * 0.5;
+        this.y = previousY + (this.y - previousY) * 0.5;
+    }
+
     show() {
         if (!this.flashing || this.flashCounter % 2 === 0) {
             // Afficher le boss seulement si il ne clignote pas ou si le compteur de clignotement est pair
@@ -44,4 +59,16 @@ class Boss extends Enemy {
             }
         }
     }
+}
+
+// Exemple de fonction appelée quand un ennemi est détruit
+function enemyDestroyed(enemy) {
+    // Probabilité de 20% pour déposer un power-up au lieu de 40%
+    if (random(1) < 0.2) {
+        // Créer un power-up à la position de l'ennemi
+        let powerUp = new PowerUp(enemy.x, enemy.y, enemy.size, powerupImages);
+        gameManager.powerUps.push(powerUp);
+    }
+    
+    // Autres traitements lors de la destruction de l'ennemi...
 }
