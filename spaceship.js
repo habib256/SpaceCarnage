@@ -22,7 +22,10 @@ class Spaceship {
             noFill();
             stroke(0, 255, 255);
             strokeWeight(3);
-            ellipse(this.x + this.size/2, this.y + this.size/2, this.size * 1.2);
+            // Calcul du facteur de pulsation : il oscille entre 0.95 et 1.05, créant un effet subtil
+            let pulse = map(sin(frameCount * 0.1), -1, 1, 0.95, 1.05);
+            let shieldDiameter = this.size * 1.2 * pulse;
+            ellipse(this.x + this.size / 2, this.y + this.size / 2, shieldDiameter, shieldDiameter);
         }
     }
 
@@ -244,15 +247,14 @@ class Spaceship {
     shoot() {
         const bullets = [];
         const centerX = this.x + this.size / 2;
-        const centerY = this.y; // On part du haut du vaisseau pour le tir
-
+        const centerY = this.y; // On tire depuis le haut du vaisseau
         if (this.doubleShotActive) {
-            // Création de deux balles avec un décalage vers la gauche et la droite
-            const bulletLeft = new Bullet(centerX - 10, centerY, 0, -1);
-            const bulletRight = new Bullet(centerX + 10, centerY, 0, -1);
+            // Utilisez un offset plus grand pour que le décalage soit visible
+            const offset = 15;
+            const bulletLeft = new Bullet(centerX - offset, centerY, 0, -1);
+            const bulletRight = new Bullet(centerX + offset, centerY, 0, -1);
             bullets.push(bulletLeft, bulletRight);
         } else {
-            // Tir d'une seule balle
             const bullet = new Bullet(centerX, centerY, 0, -1);
             bullets.push(bullet);
         }

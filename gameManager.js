@@ -248,11 +248,16 @@ class GameManager {
     };
 
     fireBulletIfNeeded() {
-        // Si le bouton de la souris est pressé et que le temps écoulé depuis le dernier tir est supérieur au taux de tir, tire une balle
         let currentTime = millis();
-        if (mouseIsPressed && mouseButton === LEFT && currentTime - this.lastFireTime >= this.fireRate) {
-            let bullet = new Bullet(this.spaceship.x + this.spaceship.size / 2, this.spaceship.y + this.spaceship.size / 2, 0, -1);
-            this.bullets.push(bullet);
+        // Si le double tir est actif, tire plus vite (par exemple 1.5 fois plus rapidement)
+        let fireInterval = this.fireRate;
+        if (this.spaceship.doubleShotActive) {
+            fireInterval = this.fireRate / 1.5;
+        }
+        if (mouseIsPressed && mouseButton === LEFT && currentTime - this.lastFireTime >= fireInterval) {
+            // Utiliser la méthode shoot() du vaisseau qui renvoie un tableau de balles
+            let newBullets = this.spaceship.shoot();
+            this.bullets.push(...newBullets);
             this.lastFireTime = currentTime;
         }
     }
