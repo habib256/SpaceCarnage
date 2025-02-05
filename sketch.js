@@ -97,7 +97,7 @@ function loadPowerupImage() {
         () => { console.error('Erreur lors du chargement de l\'image shield'); }
     );
     powerupImages.extraLife = loadImage(
-        'images/Powerup05.png', 
+        'images/PowerUp05.png', 
         () => { console.log('Image extraLife chargée avec succès'); },
         () => { console.error('Erreur lors du chargement de l\'image extraLife'); }
     );
