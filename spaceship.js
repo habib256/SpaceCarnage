@@ -14,6 +14,8 @@ class Spaceship {
         this.normalSpeed = this.speed; // Pour retrouver la vitesse normale après un boost
         // Ajout d'une propriété pour stocker le timer du bouclier
         this.shieldTimeout = null;
+        // Propriété pour gérer le multiplicateur de vitesse de tir
+        this.bulletSpeedMultiplier = 1;
     }
 
     show() {
@@ -117,8 +119,13 @@ class Spaceship {
     }
 
     boostSpeed(duration) {
-        this.speed = this.normalSpeed * 1.5;
-        setTimeout(() => this.speed = this.normalSpeed, duration);
+        // Ce power-up ne modifie plus la vitesse de déplacement
+        // Il affecte uniquement la vitesse à laquelle les balles sont tirées,
+        // multipliant par 2 le vecteur vitesse des balles pendant la durée de l'effet.
+        this.bulletSpeedMultiplier = 4;
+        setTimeout(() => {
+            this.bulletSpeedMultiplier = 1;
+        }, duration);
     }
 
     collectPowerUp(powerUp) {
@@ -251,13 +258,12 @@ class Spaceship {
         const centerX = this.x + this.size / 2;
         const centerY = this.y; // On tire depuis le haut du vaisseau
         if (this.doubleShotActive) {
-            // Utilisez un offset plus grand pour que le décalage soit visible
             const offset = 15;
-            const bulletLeft = new Bullet(centerX - offset, centerY, 0, -1);
-            const bulletRight = new Bullet(centerX + offset, centerY, 0, -1);
+            const bulletLeft = new Bullet(centerX - offset, centerY, 0, -1 * this.bulletSpeedMultiplier);
+            const bulletRight = new Bullet(centerX + offset, centerY, 0, -1 * this.bulletSpeedMultiplier);
             bullets.push(bulletLeft, bulletRight);
         } else {
-            const bullet = new Bullet(centerX, centerY, 0, -1);
+            const bullet = new Bullet(centerX, centerY, 0, -1 * this.bulletSpeedMultiplier);
             bullets.push(bullet);
         }
         return bullets;
