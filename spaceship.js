@@ -254,18 +254,34 @@ class Spaceship {
      * Sinon, une seule balle est tirée normalement.
      */
     shoot() {
-        const bullets = [];
+        const projectiles = [];
         const centerX = this.x + this.size / 2;
         const centerY = this.y; // On tire depuis le haut du vaisseau
+
         if (this.doubleShotActive) {
             const offset = 15;
-            const bulletLeft = new Bullet(centerX - offset, centerY, 0, -1 * this.bulletSpeedMultiplier);
-            const bulletRight = new Bullet(centerX + offset, centerY, 0, -1 * this.bulletSpeedMultiplier);
-            bullets.push(bulletLeft, bulletRight);
+            if (this.bulletSpeedMultiplier > 1) {
+                // Mode laser pour le double tir
+                const laserLeft = new Laser(centerX - offset, centerY, 0, -1);
+                const laserRight = new Laser(centerX + offset, centerY, 0, -1);
+                projectiles.push(laserLeft, laserRight);
+            } else {
+                // Mode balle classique pour le double tir
+                const bulletLeft = new Bullet(centerX - offset, centerY, 0, -1);
+                const bulletRight = new Bullet(centerX + offset, centerY, 0, -1);
+                projectiles.push(bulletLeft, bulletRight);
+            }
         } else {
-            const bullet = new Bullet(centerX, centerY, 0, -1 * this.bulletSpeedMultiplier);
-            bullets.push(bullet);
+            if (this.bulletSpeedMultiplier > 1) {
+                // Mode laser pour un tir unique
+                const laser = new Laser(centerX, centerY, 0, -1);
+                projectiles.push(laser);
+            } else {
+                // Mode balle classique pour un tir unique
+                const bullet = new Bullet(centerX, centerY, 0, -1);
+                projectiles.push(bullet);
+            }
         }
-        return bullets;
+        return projectiles;
     }
 }

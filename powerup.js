@@ -31,7 +31,7 @@ class PowerUp {
         translate(this.x, this.y);
         imageMode(CENTER);
         if (this.image) {
-            console.log(`Affichage de l'image pour ${this.type}, dimensions: ${this.image.width}x${this.image.height}`);
+            //console.log(`Affichage de l'image pour ${this.type}, dimensions: ${this.image.width}x${this.image.height}`);
             image(this.image, 0, 0, this.size, this.size);
         } else {
             // Dessinez un placeholder si l'image n'est pas chargée
