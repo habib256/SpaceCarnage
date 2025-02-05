@@ -27,7 +27,7 @@ class GameManager {
 
     resetGame() {
         this.bullets = [];
-        this.enemyBullets = []; // Added this line
+        this.enemyBullets = []; // Réinitialise les balles ennemies
         let spaceshipImage = random(this.spaceshipImages);
         this.spaceship = new Spaceship(spaceshipImage, 64);
         this.enemies = [];
@@ -38,7 +38,9 @@ class GameManager {
         this.powerUps = [];
         this.wave = 1; 
         this.transitionTime = millis();
-        this.enemiesCreated = false; // Added this line
+        this.enemiesCreated = false; // Réinitialise l'état de création des ennemis
+        this.bossCreated = false;    // Ajouté pour réinitialiser l'état des boss
+        this.pointsMultiplier = 1;   // Ajouté pour initialiser le multiplicateur de score
     };
 
     drawTitle() {
@@ -191,31 +193,27 @@ class GameManager {
     };
 
     moveToNextGameStateIfNeeded() {
-        // Check if the spaceship has no more lives
+        // Vérifier d'abord si le vaisseau n'a plus de vies
         if (this.spaceship.lives <= 0) {
             this.gameOver = true;
             this.gameState = "gameOver";
-            // Record the time when the game ends
             this.gameOverTime = millis();
-             // Si la vague est la première, réinitialise l'index de l'image de fond
+            // Si c'est la première vague, réinitialiser l'image de fond
             this.bgImageIndex = 0; 
-
-        }   
-        // Move to game state after a certain delay
-        if (millis() - this.transitionTime >= 2000) { // Changed from this.gameOverTime
+        }
+        // Passer à l'état de jeu après un délai donné
+        if (millis() - this.transitionTime >= 2000) {
             this.gameState = "game";
-            // Si la vague est un multiple de 5, change l'image de fond
+            // Pour les vagues multiples de 5, changer l'image de fond
             if (this.wave % 5 === 0) { 
-            // Incrementer l'index de l'image de fond et mettre à jour l'image de fond
-
-             this.bgImageIndex ++;
-             this.bg = this.bgImages[this.bgImageIndex];
+                 // Incrémente l'index de l'image de fond en s'assurant de rester dans la taille du tableau
+                 this.bgImageIndex = (this.bgImageIndex + 1) % this.bgImages.length;
+                 this.bg = this.bgImages[this.bgImageIndex];
             }  
             // Réinitialiser les variables pour la prochaine vague
             this.enemiesCreated = false;
             this.bossCreated = false;
         }
-
     };
 
     updateSpaceshipPosition() {
@@ -358,11 +356,13 @@ class GameManager {
                         if (this.enemies[j] instanceof Boss) {
                             this.score += 25;
                             powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 32, this.powerupImages);
+                            powerUp.fromBoss = true;  // Marquer ce power-up comme issu d'un boss
                             this.powerUps.push(powerUp);
                         } else {
                             this.score += 5;
                             if (Math.random() < 0.4) {
                                 powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 16, this.powerupImages);
+                                // Ici, on n'assigne pas fromBoss (donc normal)
                                 this.powerUps.push(powerUp);
                             }
                         }
@@ -381,39 +381,15 @@ class GameManager {
     checkPowerUpsCollisions() {
         // Parcourir tous les power-ups
         for (let i = this.powerUps.length - 1; i >= 0; i--) {
-            // Si le vaisseau spatial entre en collision avec un power-up
+            // Si le vaisseau entre en collision avec le power-up
             if (this.spaceship.collidesWith(this.powerUps[i])) {
-                // Appliquer l'effet du power-up
-                this.applyPowerUpEffect(this.powerUps[i]);
-                // Supprimer le power-up
+                // Appliquer l'effet du power-up directement via collectPowerUp()
+                this.spaceship.collectPowerUp(this.powerUps[i]);
+                // Supprimer le power-up après récupération
                 this.powerUps.splice(i, 1);
             }
         }
     };
-
-    applyPowerUpEffect(powerUp) {
-        console.log(`Power-up récupéré : ${powerUp.type}`);
-        
-        switch(powerUp.type) {
-            case 'shield':
-                this.spaceship.activateShield(5000);
-                break;
-            case 'extraLife':
-                this.spaceship.lives++;
-                break;
-            case 'pointsMultiplier':
-                this.activatePointsMultiplier(10000);
-                break;
-            case 'doubleShot':
-                this.spaceship.activateDoubleShot(7000);
-                break;
-            case 'speedBoost':
-                this.spaceship.activateSpeedBoost(6000);
-                break;
-            default:
-                console.log(`Type de power-up inconnu : ${powerUp.type}`);
-        }
-    }
 
     handleMousePressed() {
         
@@ -433,17 +409,14 @@ class GameManager {
     }
     
     handleTouchPressed() {
-        if (mouseButton === LEFT) {
-            if (this.gameState === "gameOver" && millis() - this.gameOverTime > 1000) { // Added this line
-                this.resetGame();
-                this.gameState = "transition";
-                this.transitionTime = millis();
-            }
-            if (this.gameState === "title") {
-                this.gameState = "transition";
-                this.transitionTime = millis();
-            }
-    
+        if (this.gameState === "gameOver" && millis() - this.gameOverTime > 1000) { // Added this line
+            this.resetGame();
+            this.gameState = "transition";
+            this.transitionTime = millis();
+        }
+        if (this.gameState === "title") {
+            this.gameState = "transition";
+            this.transitionTime = millis();
         }
     }
 

@@ -2,6 +2,13 @@
 
 Toutes les modifications notables à ce projet seront documentées dans ce fichier.
 
+## [0.4.3] - 2025-02-05 - Power-Up Extended Edition
+
+- Correction du comportement de rebond des balles sur le bouclier grâce à l'utilisation du calcul du vecteur normal, assurant ainsi un rebond réaliste quels que soient l'angle et la position d'impact.
+- La zone de détection du bouclier a été ajustée pour correspondre exactement à son affichage (un cercle) au lieu de la zone de détection classique du vaisseau.
+- Les effets des power-ups issus des boss sont désormais multipliés par 2 (durée du bouclier, points de vie supplémentaires, multiplicateur de points, double tir et boost de vitesse).
+- Optimisation globale de la gestion des timers et des collisions pour offrir une expérience de gameplay plus fluide.
+
 ## [0.4.2] - 2023-11-23 - Power-Up Edition
 
 - Ajout de power-ups avec différents effets (bouclier, vie supplémentaire, multiplicateur de points, double tir, boost de vitesse).

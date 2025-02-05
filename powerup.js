@@ -16,7 +16,7 @@ class PowerUp {
 
     getImageForType(type) {
         if (type === 'shield') {
-            return this.images['pointsMultiplier'];  // Utilise l'image PowerUp02.png pour le bouclier
+            return this.images['shield'];  // Correction : utilisation de l'image associée au bouclier
         }
         if (this.images && this.images[type]) {
             console.log(`Image chargée pour ${type}`);
@@ -58,7 +58,12 @@ class PowerUp {
 
 
     collidesWith(other) {
-        let d = dist(this.x + this.size / 2, this.y + this.size / 2, other.x + other.size / 2, other.y + this.size / 2);
+        let d = dist(
+            this.x + this.size / 2,
+            this.y + this.size / 2,
+            other.x + other.size / 2,
+            other.y + other.size / 2
+        );
         return (d < this.size / 2 + other.size / 2);
     }
 }

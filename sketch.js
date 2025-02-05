@@ -91,9 +91,9 @@ function loadExplosionImage() {
 
 function loadPowerupImage() {
     powerupImages = {
-        shield: loadImage('images/PowerUp00.png'),
+        shield: loadImage('images/PowerUp02.png'),        // Le bouclier est représenté par powerup2.png
         extraLife: loadImage('images/PowerUp01.png'),
-        pointsMultiplier: loadImage('images/PowerUp02.png'),
+        pointsMultiplier: loadImage('images/PowerUp00.png'),  // Réaffecté pour laisser place au bouclier
         doubleShot: loadImage('images/PowerUp03.png'),
         speedBoost: loadImage('images/PowerUp04.png')
     };
