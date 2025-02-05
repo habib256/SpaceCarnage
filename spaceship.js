@@ -22,8 +22,9 @@ class Spaceship {
             noFill();
             stroke(0, 255, 255);
             strokeWeight(6);
-            // Calcul du facteur de pulsation : il oscille entre 0.95 et 1.05, créant un effet subtil
-            let pulse = map(sin(frameCount * 0.1), -1, 1, 0.95, 1.05);
+            // Calcul du facteur de pulsation : il oscille entre 0.95 et 1.05.
+            // Multiplié par 10 pour accélérer la pulsation
+            let pulse = map(sin(frameCount * 0.5), -1, 1, 0.95, 1.05);
             let shieldDiameter = this.size * 1.2 * pulse;
             ellipse(this.x + this.size / 2, this.y + this.size / 2, shieldDiameter, shieldDiameter);
         }
@@ -122,6 +123,7 @@ class Spaceship {
 
     collectPowerUp(powerUp) {
         // Si le power-up provient d'un boss, multiplier les effets par 2
+        // (sauf pour le power-up extraLife, qui doit toujours ajouter 1 vie)
         const multiplier = (powerUp.fromBoss === true) ? 2 : 1;
         switch (powerUp.type) {
             case 'shield':
@@ -129,8 +131,8 @@ class Spaceship {
                 this.activateShield(5000 * multiplier);
                 break;
             case 'extraLife':
-                // Ajoute une ou deux vies en fonction du multiplicateur
-                this.lives += 1 * multiplier;
+                // Ajoute une seule vie, le multiplicateur n'est pas appliqué pour l'extra life
+                this.lives += 1;
                 break;
             case 'pointsMultiplier':
                 // Le multiplicateur passe à 2 (ou 4 si bonus de boss)

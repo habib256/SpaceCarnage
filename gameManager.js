@@ -360,14 +360,27 @@ class GameManager {
                         let powerUp;
                         if (this.enemies[j] instanceof Boss) {
                             this.score += 25;
-                            powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 32, this.powerupImages);
-                            powerUp.fromBoss = true;  // Marquer ce power-up comme issu d'un boss
+                            // Pour chaque boss vaincu, générer un power-up à 100% du temps
+                            let powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 32, this.powerupImages);
+                            powerUp.fromBoss = true;  // Marquer que ce power-up provient d'un boss
+                            if (Math.random() < 0.4) {  // 40% de chances pour une extra life
+                                powerUp.type = 'extraLife';
+                            } else {
+                                let allowedTypes = ['shield', 'pointsMultiplier', 'doubleShot', 'speedBoost'];
+                                powerUp.type = allowedTypes[Math.floor(Math.random() * allowedTypes.length)];
+                            }
+                            powerUp.image = powerUp.getImageForType(powerUp.type);
                             this.powerUps.push(powerUp);
                         } else {
                             this.score += 5;
+                            // Pour les ennemis normaux, on exclut l'extraLife et on ne droppe le power-up qu'avec une probabilité de 40%
                             if (Math.random() < 0.4) {
-                                powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 16, this.powerupImages);
-                                // Ici, on n'assigne pas fromBoss (donc normal)
+                                let allowedTypes = ['shield', 'pointsMultiplier', 'doubleShot', 'speedBoost'];
+                                let chosenType = allowedTypes[Math.floor(Math.random() * allowedTypes.length)];
+                                
+                                let powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 16, this.powerupImages);
+                                powerUp.type = chosenType;
+                                powerUp.image = powerUp.getImageForType(chosenType);
                                 this.powerUps.push(powerUp);
                             }
                         }
