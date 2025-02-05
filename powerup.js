@@ -5,12 +5,13 @@ class PowerUp {
         this.size = size*2;
         this.images = images;
         this.type = this.getRandomType();
+        console.log("Power-up créé de type :", this.type);
         this.image = this.getImageForType(this.type);
         this.duration = 5000; // Durée de 5 secondes pour les effets temporaires
     }
 
     getRandomType() {
-        const types = ['shield', 'extraLife', 'pointsMultiplier', 'doubleShot', 'speedBoost'];
+        const types = ['shield', 'extraLife', 'pointsMultiplier', 'doubleShot', 'lateralShoot'];
         return types[Math.floor(Math.random() * types.length)];
     }
 
@@ -30,15 +31,13 @@ class PowerUp {
         push();
         translate(this.x, this.y);
         imageMode(CENTER);
+        let scaleFactor = (this.type === 'lateralShoot') ? 1.3 : 1;
         if (this.image) {
-            //console.log(`Affichage de l'image pour ${this.type}, dimensions: ${this.image.width}x${this.image.height}`);
-            image(this.image, 0, 0, this.size, this.size);
+            image(this.image, 0, 0, this.size * scaleFactor, this.size * scaleFactor);
         } else {
-            // Dessinez un placeholder si l'image n'est pas chargée
             fill(255, 0, 255);
             noStroke();
-            ellipse(0, 0, this.size, this.size);
-            // Ajouter du texte pour identifier le type de power-up
+            ellipse(0, 0, this.size * scaleFactor, this.size * scaleFactor);
             fill(0);
             textAlign(CENTER, CENTER);
             textSize(12);

@@ -111,10 +111,10 @@ function loadPowerupImage() {
         () => { console.log('Image doubleShot chargée avec succès'); },
         () => { console.error('Erreur lors du chargement de l\'image doubleShot'); }
     );
-    powerupImages.speedBoost = loadImage(
+    powerupImages.lateralShoot = loadImage(
         'images/PowerUp04.png', 
-        () => { console.log('Image speedBoost chargée avec succès'); },
-        () => { console.error('Erreur lors du chargement de l\'image speedBoost'); }
+        () => { console.log('Image lateralShoot chargée avec succès'); },
+        () => { console.error('Erreur lors du chargement de l\'image lateralShoot'); }
     );
 }
 

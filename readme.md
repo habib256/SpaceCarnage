@@ -43,9 +43,9 @@ Dans Space Carnage, des bonus mystérieux apparaissent dans le vide spatial, pr�
   - **Effet** : Déchaîne la fureur des étoiles avec un double rayon destructeur ! Vos ennemis trembleront devant cette puissance de feu démultipliée.
   - **Durée** : 5 secondes de chaos total, prolongées à 10 secondes si le bonus vient d'un boss.
 
-- **⚡ Boost de Vitesse (speedBoost)**
-  - **Effet** : Vos tirs deviennent des éclairs mortels, fendant l'espace à une vitesse vertigineuse ! Une pluie de projectiles s'abat sur vos adversaires.
-  - **Durée** : 6 secondes de furie spatiale, doublées à 12 secondes face à la générosité d'un boss.
+- **⚡ Tir Latéral (lateralShoot)**
+  - **Effet** : Lorsqu'activé, ce power-up ajoute deux tirs latéraux en plus du tir principal du vaisseau, permettant de couvrir plus de zones sur le champ de bataille.
+  - **Durée** : 6 secondes d'attaque décuplée, ou 12 secondes si obtenu d'un boss.
 
 ### 🎲 Mécanique de Drop :
 

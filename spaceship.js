@@ -16,6 +16,9 @@ class Spaceship {
         this.shieldTimeout = null;
         // Propriété pour gérer le multiplicateur de vitesse de tir
         this.bulletSpeedMultiplier = 1;
+        this.doubleShotActive = false;
+        // Propriété pour le lateral shoot
+        this.lateralShootActive = false;
     }
 
     show() {
@@ -152,8 +155,9 @@ class Spaceship {
                     this.doubleShotActive = false;
                 }, 5000 * multiplier);
                 break;
-            case 'speedBoost':
-                this.activateSpeedBoost(6000 * multiplier);
+            case 'lateralShoot':
+                // Activation de l'effet Latéral Shoot (durée de 6 secondes, multipliée si issu d'un boss)
+                this.activateLateralShoot(6000 * multiplier);
                 break;
             default:
                 console.warn(`Power-up inconnu : ${powerUp.type}`);
@@ -256,32 +260,40 @@ class Spaceship {
     shoot() {
         const projectiles = [];
         const centerX = this.x + this.size / 2;
-        const centerY = this.y; // On tire depuis le haut du vaisseau
+        const centerY = this.y; // Tir depuis le haut du vaisseau
 
+        // Tir principal (simple ou double)
         if (this.doubleShotActive) {
             const offset = 15;
-            if (this.bulletSpeedMultiplier > 1) {
-                // Mode laser pour le double tir
-                const laserLeft = new Laser(centerX - offset, centerY, 0, -1);
-                const laserRight = new Laser(centerX + offset, centerY, 0, -1);
-                projectiles.push(laserLeft, laserRight);
-            } else {
-                // Mode balle classique pour le double tir
-                const bulletLeft = new Bullet(centerX - offset, centerY, 0, -1);
-                const bulletRight = new Bullet(centerX + offset, centerY, 0, -1);
-                projectiles.push(bulletLeft, bulletRight);
-            }
+            const bulletLeft = new Bullet(centerX - offset, centerY, 0, -1);
+            const bulletRight = new Bullet(centerX + offset, centerY, 0, -1);
+            projectiles.push(bulletLeft, bulletRight);
         } else {
-            if (this.bulletSpeedMultiplier > 1) {
-                // Mode laser pour un tir unique
-                const laser = new Laser(centerX, centerY, 0, -1);
-                projectiles.push(laser);
-            } else {
-                // Mode balle classique pour un tir unique
-                const bullet = new Bullet(centerX, centerY, 0, -1);
-                projectiles.push(bullet);
-            }
+            const bullet = new Bullet(centerX, centerY, 0, -1);
+            projectiles.push(bullet);
         }
+
+        // Tir latéral modifié pour partir à 30° par rapport à la verticale,
+        // quitter le vaisseau une dizaine de pixels plus bas,
+        // et être décalé de 10 pixels sur les côtés.
+        if (this.lateralShootActive) {
+            const angle = Math.PI / 6; // 30 degrés en radians
+            const lateralStartY = centerY + 10; // Décalage de 10 pixels vers le bas
+            const lateralStartXLeft = centerX - 30; // Décalage de 10 pixels pour le côté gauche
+            const lateralStartXRight = centerX + 30; // Décalage de 10 pixels pour le côté droit
+            const lateralBulletLeft = new Bullet(lateralStartXLeft, lateralStartY, -Math.sin(angle), -Math.cos(angle));
+            const lateralBulletRight = new Bullet(lateralStartXRight, lateralStartY, Math.sin(angle), -Math.cos(angle));
+            projectiles.push(lateralBulletLeft, lateralBulletRight);
+        }
+
         return projectiles;
+    }
+
+    // Méthode pour activer l'effet Latéral Shoot pendant une durée donnée
+    activateLateralShoot(duration) {
+        this.lateralShootActive = true;
+        setTimeout(() => {
+            this.lateralShootActive = false;
+        }, duration);
     }
 }

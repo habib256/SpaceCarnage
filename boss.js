@@ -10,15 +10,20 @@ class Boss extends Enemy {
     }
 
     shoot() {
-        let currentTime = millis();
+        const currentTime = millis();
         if (currentTime - this.lastFireTime >= this.fireRate) {
-           // Calculer la position de la balle en fonction de l'angle
-            let bulletX = this.x + this.size / 2 + Math.cos(this.angle) * this.size / 2;
-            let bulletY = this.y + this.size / 2 + Math.sin(this.angle) * this.size / 2;
+            // Calculer la position de départ de la balle en fonction de l'angle du tir
+            const bulletX = this.x + this.size / 2 + Math.cos(this.angle) * this.size / 2;
+            const bulletY = this.y + this.size / 2 + Math.sin(this.angle) * this.size / 2;
             // Calculer la direction de la balle en fonction de l'angle
-            let dx = Math.cos(this.angle);
-            let dy = Math.sin(this.angle);
-            let bullet = new Bullet(bulletX, bulletY, dx, dy);
+            const dx = Math.cos(this.angle);
+            const dy = Math.sin(this.angle);
+            const bullet = new Bullet(bulletX, bulletY, dx, dy);
+            
+            // Ralentir la vitesse de déplacement de la balle
+            // Ici, on divise la vitesse par 2 (ou ajustez avec 3 pour un ralentissement plus marqué)
+            bullet.speed = bullet.speed ? bullet.speed / 4 : 8;
+            
             this.angle += Math.PI / 8;
             this.lastFireTime = millis();
             return bullet;
