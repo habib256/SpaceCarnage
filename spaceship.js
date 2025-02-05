@@ -21,7 +21,7 @@ class Spaceship {
         if (this.activeShield) {
             noFill();
             stroke(0, 255, 255);
-            strokeWeight(3);
+            strokeWeight(6);
             // Calcul du facteur de pulsation : il oscille entre 0.95 et 1.05, créant un effet subtil
             let pulse = map(sin(frameCount * 0.1), -1, 1, 0.95, 1.05);
             let shieldDiameter = this.size * 1.2 * pulse;
