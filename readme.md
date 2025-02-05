@@ -1,79 +1,78 @@
 # 🚀 Space Carnage : L'Épopée Spatiale Ultime !
 
-Bienvenue dans l'univers palpitant de Space Carnage, un jeu de tir spatial captivant créé avec passion en JavaScript et p5.js !
+Bienvenue dans l'univers électrisant de Space Carnage, le jeu de tir spatial qui fait vibrer les étoiles et vous propulse vers des aventures interstellaires inoubliables !
 
-## 🎮 Embarquez pour l'aventure !
+## 🎮 Préparez-vous à une expérience cosmique !
 
-[Lancez-vous dans la bataille spatiale ici !](https://habib256.github.io/SpaceCarnage/)
+[Plongez dans la bataille spatiale et sauvez la galaxie dès maintenant !](https://habib256.github.io/SpaceCarnage/)
 
 ### Votre mission, si vous l'acceptez :
 
-1. 🕹️ Pilotez votre vaisseau avec la souris.  
-2. 🔫 Tirez sur les ennemis d'un clic gauche.  
-3. 💥 Exterminez les adversaires pour accumuler des points.  
-4. 🛡️ Évitez les tirs ennemis et les collisions pour préserver votre vaisseau.  
-5. 🏆 Visez le meilleur score !
+- 🕹️ Maniez votre vaisseau avec virtuosité grâce à la souris.
+- 🔫 Déchaînez un torrent de projectiles d'un simple clic.
+- 💥 Détruisez vos ennemis et cumulez des points pour atteindre la gloire.
+- 🛡️ Esquivez habilement tirs ennemis et collisions dans une danse céleste.
+- 🏆 Gravissez les sommets du classement et devenez la légende interstellaire que la galaxie attend !
 
-### Rencontres galactiques :
+### Rencontres interstellaires :
 
-- 👽 Ennemis standards : 5 points.
-- 🦹 Boss coriaces : 20 points (attention, ils sont robustes !).
-- 🎁 Power-ups mystérieux : bonus temporaires qui dynamisent le combat.
+- 👽 **Ennemis standards** : 5 points – Des adversaires rapides et imprévisibles pour tester votre réactivité !
+- 🦹 **Boss épiques** : 20 points – De redoutables titans spatiaux qui exigent le meilleur de votre stratégie !
+- 🎁 **Power-ups mystiques** : Des bonus temporaires qui métamorphosent votre vaisseau en véritable machine de guerre !
 
-## ⚡ Règles et Fonctionnement des Power-ups
+## ⚡ Les secrets des Power-ups
 
-Dans Space Carnage, des bonus mystérieux apparaissent dans le vide spatial, prêts à transformer votre vaisseau en véritable machine de guerre ! 🚀 Chaque power-up possède son propre pouvoir magique et sa durée unique.
+Dans Space Carnage, chaque power-up est une clé magique qui peut renverser le cours de la bataille. Découvrez comment leurs pouvoirs extraordinaires peuvent transformer la donne :
 
 ### Types de Power-ups :
 
 - **🛡️ Bouclier (shield)**
-  - **Effet** : Déploie un champ de force éblouissant autour de votre vaisseau, le rendant temporairement invulnérable aux attaques ennemies ! Les tirs adverses rebondissent dans une danse cosmique.
-  - **Durée** : 5 secondes de protection divine, doublée à 10 secondes si le bonus provient d'un boss.
+  - **Effet** : Déployez un champ de force étincelant qui vous rend temporairement invulnérable. Vos ennemis verront leurs tirs rebondir dans un spectacle lumineux !
+  - **Durée** : 5 secondes de protection divine, doublées à 10 secondes si le bonus provient d'un boss !
 
 - **❤️ Vie Supplémentaire (extraLife)**
-  - **Effet** : Une bénédiction des étoiles qui vous offre une chance supplémentaire de poursuivre votre quête !
-  - **Particularité** : Ce don précieux reste unique, même face à la puissance d'un boss.
-  - **Activation** : Instantanée, comme un battement de cœur dans l'espace.
+  - **Effet** : Recevez une chance supplémentaire pour poursuivre votre odyssée spatiale – un véritable cadeau des astres !
+  - **Particularité** : Ce bonus est unique et reste inégalé, même face aux plus féroces adversaires.
 
 - **✨ Multiplicateur de Points (pointsMultiplier)**
-  - **Effet** : Transforme chaque victoire en festival de points ! ×2 en temps normal, et un incroyable ×4 si le bonus provient d'un boss.
-  - **Durée** : 5 secondes de gloire, ou 10 secondes de pure extase avec un bonus de boss.
+  - **Effet** : Transformez chaque victoire en un festival de points ! Doublez vos gains normalement, et quadruplez-les en mode boss !
+  - **Durée** : 5 secondes de gloire intense, ou 10 secondes d'extase interstellaire !
 
 - **🔫 Double Tir (doubleShot)**
-  - **Effet** : Déchaîne la fureur des étoiles avec un double rayon destructeur ! Vos ennemis trembleront devant cette puissance de feu démultipliée.
-  - **Durée** : 5 secondes de chaos total, prolongées à 10 secondes si le bonus vient d'un boss.
+  - **Effet** : Libérez une puissance de feu dévastatrice avec un double rayon laser qui annihile tout sur son passage !
+  - **Durée** : 5 secondes de chaos explosif, prolongées à 10 secondes en mode boss !
 
 - **⚡ Tir Latéral (lateralShoot)**
-  - **Effet** : Lorsqu'activé, ce power-up ajoute deux tirs latéraux en plus du tir principal du vaisseau, permettant de couvrir plus de zones sur le champ de bataille.
-  - **Durée** : 6 secondes d'attaque décuplée, ou 12 secondes si obtenu d'un boss.
+  - **Effet** : Ajoutez deux tirs latéraux à votre arsenal pour couvrir tous les angles et maximiser les dégâts !
+  - **Durée** : 6 secondes d'attaque surmultipliée, ou 12 secondes en mode boss !
 
 ### 🎲 Mécanique de Drop :
 
 - **👑 Boss**  
-  La défaite d'un boss garantit un trésor spatial ! Une chance de 40% d'obtenir le précieux don de vie supplémentaire, sinon un autre pouvoir extraordinaire vous attend !
+  La défaite d'un boss est synonyme de récompense inestimable : une chance de 40% d'obtenir un extraLife, sinon un bonus phénoménal vous attend !
 
 - **👾 Ennemis Standards**  
-  Ces adversaires ont 40% de chances de libérer un power-up en explosant. Attention, ils ne peuvent pas offrir de vie supplémentaire, mais leurs autres bonus sont tout aussi redoutables !
+  En détruisant ces adversaires, vous bénéficiez de 40% de chances de récupérer un power-up – (note : extraLife n'est pas disponible ici).
 
-Maîtrisez ces power-ups légendaires pour devenir le héros que la galaxie attend ! Chaque bonus peut transformer une défaite certaine en victoire éclatante. 🌟
+Maîtrisez ces pouvoirs légendaires pour transformer chaque combat en triomphe intersidéral !
 
-## �� L'intelligence derrière le chaos spatial
+## 🌌 L'intelligence derrière ce chaos spatial
 
-Notre univers est orchestré par ces fichiers cosmiques :
+L'univers de Space Carnage est méticuleusement orchestré :
 
-- `sketch.js` : Le cerveau de l'opération.
-- `spaceship.js` : Votre fidèle destrier des étoiles.
-- `enemy.js` & `boss.js` : Les menaces extraterrestres.
-- `bullet.js` : L'essence même du combat.
-- `gameManager.js` : L'arbitre impartial de vos exploits.
-- `powerUp.js` : La cerise sur le gâteau spatial.
+- **sketch.js** : Le cerveau derrière l'opération spatiale.
+- **spaceship.js** : Votre vaisseau – votre fidèle allié dans l'infini cosmos.
+- **enemy.js** & **boss.js** : Les menaces venues des confins de l'espace.
+- **bullet.js** : L'essence même du combat interstellaire.
+- **gameManager.js** : L'arbitre impartial de vos exploits galactiques.
+- **powerUp.js** : La touche magique qui sublime chaque bataille.
 
-# 🚀 Prêt à embarquer ?
+# 🚀 Prêt à repousser les limites de l'univers ?
 
-Lancez le jeu et plongez dans une aventure intersidérale où chaque power-up peut faire pencher la balance entre la victoire et la défaite !
+Lancez le jeu, entrez dans l'arène cosmique et faites de chaque seconde une aventure épique ! La galaxie a besoin de vous – devenez le héros légendaire que l'espace attend !
 
 ## 🌟 Le créateur de cet univers
 
-VERHILLE Arnaud, explorateur des codes et rêveur intergalactique (GPL2)
+VERHILLE Arnaud, artisan du code et rêveur intergalactique (GPL2)
 
-Alors, prêt à devenir le héros dont la galaxie a besoin ? Que la force du code soit avec vous !
+Alors, qu'attendez-vous ? Embarquez, affrontez les ténèbres cosmiques et que la force du code soit avec vous !
