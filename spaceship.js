@@ -119,10 +119,10 @@ class Spaceship {
     }
 
     boostSpeed(duration) {
-        // Ce power-up ne modifie plus la vitesse de déplacement
-        // Il affecte uniquement la vitesse à laquelle les balles sont tirées,
-        // multipliant par 2 le vecteur vitesse des balles pendant la durée de l'effet.
-        this.bulletSpeedMultiplier = 4;
+        // Ce power-up n'affecte plus la vitesse de déplacement du vaisseau,
+        // mais augmente considérablement la vitesse à laquelle les balles sont tirées.
+        // Ici, on passe le multiplicateur de tir à 10 pour obtenir un effet plus marqué.
+        this.bulletSpeedMultiplier = 10;
         setTimeout(() => {
             this.bulletSpeedMultiplier = 1;
         }, duration);
