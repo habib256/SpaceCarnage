@@ -90,13 +90,32 @@ function loadExplosionImage() {
 }
 
 function loadPowerupImage() {
-    powerupImages = {
-        shield: loadImage('images/PowerUp02.png'),        // Le bouclier est représenté par powerup2.png
-        extraLife: loadImage('images/Powerup05.png'),       // Utilisation de Powerup05.png pour extraLife
-        pointsMultiplier: loadImage('images/PowerUp00.png'),  // Réaffecté pour laisser place au bouclier
-        doubleShot: loadImage('images/PowerUp03.png'),
-        speedBoost: loadImage('images/PowerUp04.png')
-    };
+    powerupImages = {};
+    powerupImages.shield = loadImage(
+        'images/PowerUp02.png', 
+        () => { console.log('Image shield chargée avec succès'); }, 
+        () => { console.error('Erreur lors du chargement de l\'image shield'); }
+    );
+    powerupImages.extraLife = loadImage(
+        'images/Powerup05.png', 
+        () => { console.log('Image extraLife chargée avec succès'); },
+        () => { console.error('Erreur lors du chargement de l\'image extraLife'); }
+    );
+    powerupImages.pointsMultiplier = loadImage(
+        'images/PowerUp00.png', 
+        () => { console.log('Image pointsMultiplier chargée avec succès'); },
+        () => { console.error('Erreur lors du chargement de l\'image pointsMultiplier'); }
+    );
+    powerupImages.doubleShot = loadImage(
+        'images/PowerUp03.png', 
+        () => { console.log('Image doubleShot chargée avec succès'); },
+        () => { console.error('Erreur lors du chargement de l\'image doubleShot'); }
+    );
+    powerupImages.speedBoost = loadImage(
+        'images/PowerUp04.png', 
+        () => { console.log('Image speedBoost chargée avec succès'); },
+        () => { console.error('Erreur lors du chargement de l\'image speedBoost'); }
+    );
 }
 
 function isMobileDevice() {
