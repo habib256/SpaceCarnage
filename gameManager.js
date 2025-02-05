@@ -344,6 +344,11 @@ class GameManager {
         this.enemyBullets = this.enemyBullets.filter(bullet => !bullet.offScreen());
     };
 
+    // Cette méthode ajuste le pourcentage de drop en fonction du nombre d'ennemis présents à l'écran.
+    getAdjustedDropChance(baseChance) {
+        return baseChance / (1 + this.enemies.length);
+    }
+
     checkBulletsCollisions() {
         for (let i = this.bullets.length - 1; i >= 0; i--) {
             for (let j = this.enemies.length - 1; j >= 0; j--) {
@@ -374,7 +379,7 @@ class GameManager {
                         } else {
                             this.score += 5;
                             // Pour les ennemis normaux, on exclut l'extraLife et on ne droppe le power-up qu'avec une probabilité de 40%
-                            if (Math.random() < 0.4) {
+                            if (Math.random() < this.getAdjustedDropChance(0.4)) {
                                 let allowedTypes = ['shield', 'pointsMultiplier', 'doubleShot', 'lateralShoot'];
                                 let chosenType = allowedTypes[Math.floor(Math.random() * allowedTypes.length)];
                                 

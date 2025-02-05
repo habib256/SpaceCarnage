@@ -63,9 +63,12 @@ class Boss extends Enemy {
 
 // Exemple de fonction appelée quand un ennemi est détruit
 function enemyDestroyed(enemy) {
-    // Probabilité de 20% pour déposer un power-up au lieu de 40%
-    if (random(1) < 0.2) {
-        // Créer un power-up à la position de l'ennemi
+    let baseChance = 0.2;
+    // On ajuste la chance en se basant sur le nombre d'ennemis actifs (accessible via gameManager)
+    let enemyCount = gameManager.enemies.length;
+    let adjustedChance = baseChance / (1 + enemyCount);
+
+    if (random(1) < adjustedChance) {
         let powerUp = new PowerUp(enemy.x, enemy.y, enemy.size, powerupImages);
         gameManager.powerUps.push(powerUp);
     }

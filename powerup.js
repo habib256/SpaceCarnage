@@ -31,7 +31,12 @@ class PowerUp {
         push();
         translate(this.x, this.y);
         imageMode(CENTER);
-        let scaleFactor = (this.type === 'lateralShoot') ? 1.5 : 1;
+        let scaleFactor = 1;
+        if (this.type === 'lateralShoot') {
+            scaleFactor = 1.5;
+        } else if (this.type === 'doubleShot') {
+            scaleFactor = 1.3;
+        }
         if (this.image) {
             image(this.image, 0, 0, this.size * scaleFactor, this.size * scaleFactor);
         } else {
