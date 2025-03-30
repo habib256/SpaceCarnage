@@ -6,7 +6,7 @@ Bienvenue dans l'univers électrisant de Space Carnage, le jeu de tir spatial qu
 
 [Plongez dans la bataille spatiale et sauvez la galaxie dès maintenant !](https://habib256.github.io/SpaceCarnage/)
 
-### Votre mission, si vous l'acceptez :
+### 🎯 Votre mission, si vous l'acceptez :
 
 - 🕹️ Maniez votre vaisseau avec virtuosité grâce à la souris.
 - 🔫 Déchaînez un torrent de projectiles d'un simple clic.
@@ -42,9 +42,9 @@ Dans Space Carnage, chaque power-up est une clé magique qui peut renverser le c
   - **Effet** : Libérez une puissance de feu dévastatrice avec un double rayon laser qui annihile tout sur son passage !
   - **Durée** : 5 secondes de chaos explosif, prolongées à 10 secondes en mode boss !
 
-- **⚡ Tir Latéral (lateralShoot)**
-  - **Effet** : Ajoutez deux tirs latéraux à votre arsenal pour couvrir tous les angles et maximiser les dégâts !
-  - **Durée** : 6 secondes d'attaque surmultipliée, ou 12 secondes en mode boss !
+- **⚡ Triple Tir (tripleShot)**
+  - **Effet** : Déchaînez un déluge de projectiles avec trois rayons simultanés pour une destruction maximale !
+  - **Durée** : 6 secondes d'attaque dévastatrice, prolongées à 12 secondes en mode boss !
 
 ### 🎲 Mécanique de Drop :
 

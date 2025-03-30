@@ -61,10 +61,6 @@ SpaceCarnage/
 - Gestion des collisions
 - Système de destruction
 
-#### Laser (laser.js)
-- Hérite de Bullet
-- Projectile spécial avec comportement unique
-
 #### PowerUp (powerup.js)
 - Bonus collectables
 - Différents types de power-ups

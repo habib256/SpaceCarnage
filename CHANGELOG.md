@@ -2,6 +2,12 @@
 
 Toutes les modifications notables à ce projet seront documentées dans ce fichier.
 
+## [0.4.4] - 2025-03-30 - Power-Up Graphics Edition
+
+- Mise à jour complète des graphismes des power-ups (PowerUp00 à PowerUp05)
+- Optimisation de l'affichage des power-ups avec de meilleures images
+- Amélioration de la cohérence visuelle des power-ups dans le jeu
+
 ## [0.4.3] - 2025-02-05 - Power-Up Extended Edition
 
 - Correction du comportement de rebond des balles sur le bouclier grâce à l'utilisation du calcul du vecteur normal, assurant ainsi un rebond réaliste quels que soient l'angle et la position d'impact.
