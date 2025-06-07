@@ -2,6 +2,12 @@
 
 Toutes les modifications notables à ce projet seront documentées dans ce fichier.
 
+## [0.5.0] - 2025-06-07 - Asteroid Bonus Edition
+
+- Ajout d'un **mode bonus** accessible depuis l'écran titre avec la touche **B**.
+- Dans ce mode, le vaisseau doit survivre à un champ d'astéroïdes en scrolling.
+- Mise à jour du titre pour informer de cette nouvelle fonctionnalité.
+
 ## [0.4.4] - 2025-03-30 - Power-Up Graphics Edition
 
 - Mise à jour complète des graphismes des power-ups (PowerUp00 à PowerUp05)

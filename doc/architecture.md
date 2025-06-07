@@ -15,6 +15,7 @@ SpaceCarnage/
 │   └── Title.png
 ├── boss.js
 ├── bullet.js
+├── asteroid.js
 ├── enemy.js
 ├── explosion.js
 ├── gameManager.js
@@ -32,7 +33,7 @@ SpaceCarnage/
 
 #### GameManager (gameManager.js)
 - Cœur du jeu, gère l'état et la logique globale
-- Gère les états du jeu (title, game, gameOver, transition)
+- Gère les états du jeu (title, game, gameOver, transition, bonus)
 - Coordonne les interactions entre les différentes entités
 - Gère le système de score et de vies
 - Contrôle le cycle de jeu et les transitions
@@ -69,6 +70,10 @@ SpaceCarnage/
 #### Explosion (explosion.js)
 - Effets visuels d'explosion
 - Animation de destruction
+
+#### Asteroid (asteroid.js)
+- Obstacle du mode bonus
+- Se déplace verticalement pour créer un effet de champ d'astéroïdes
 
 ### 2.2 Point d'Entrée (sketch.js)
 - Initialisation du jeu
