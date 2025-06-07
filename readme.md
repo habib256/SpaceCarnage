@@ -56,6 +56,13 @@ Dans Space Carnage, chaque power-up est une clé magique qui peut renverser le c
 
 Maîtrisez ces pouvoirs légendaires pour transformer chaque combat en triomphe intersidéral !
 
+## 🌠 Mode Bonus Astéroïdes
+
+Envie d'une pause explosive ? Depuis l'écran titre, appuyez sur **B** pour
+affronter un champ d'astéroïdes en défilement continu. Évitez les rochers
+spatiaux et tenez bon jusqu'à la fin du chrono pour revenir glorieux au jeu
+principal !
+
 ## 🌌 L'intelligence derrière ce chaos spatial
 
 L'univers de Space Carnage est méticuleusement orchestré :

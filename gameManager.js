@@ -6,7 +6,7 @@ class GameManager {
         this.bgImageIndex = 0; 
         this.bg = bgImages[this.bgImageIndex];
         this.explosionImages = explosionImages; // Changed from this.ExplosionsImages
-        this.gameState = "title"; // can be "title", "game", "gameOver", "transition"
+        this.gameState = "title"; // can be "title", "game", "gameOver", "transition", "bonus"
         this.enemyBullets = [];
         this.explosions = [];
         this.gameOver = false;
@@ -23,6 +23,12 @@ class GameManager {
         this.bossCreated = false; 
         this.titleImage = titleImage;
         this.powerupImages = powerupImages; // Added this line
+        this.asteroids = [];
+        this.bonusStartTime = 0;
+        this.bonusDuration = 10000; // duration of bonus mode in ms
+        this.asteroidSpawnRate = 800;
+        this.lastAsteroidTime = 0;
+        this.scrollY = 0;
         this.resetGame();
     };
 
@@ -42,6 +48,9 @@ class GameManager {
         this.enemiesCreated = false; // Réinitialise l'état de création des ennemis
         this.bossCreated = false;    // Ajouté pour réinitialiser l'état des boss
         this.pointsMultiplier = 1;   // Ajouté pour initialiser le multiplicateur de score
+        this.asteroids = [];
+        this.scrollY = 0;
+        this.lastAsteroidTime = millis();
     };
 
     drawTitle() {
@@ -52,6 +61,9 @@ class GameManager {
         let pressKeyText = "Click to start";
         text(titleText, (width - textWidth(titleText)) / 2, 50);
         text(pressKeyText, (width - textWidth(pressKeyText)) / 2, 90);
+        let bonusText = "Press B for Asteroid Bonus";
+        textSize(24);
+        text(bonusText, (width - textWidth(bonusText)) / 2, 130);
         
         // Vérifiez si titleImage est défini avant de l'utiliser
         if (this.titleImage && this.titleImage.width) {
@@ -151,6 +163,7 @@ class GameManager {
             title: this.drawTitle,
             game: this.handleGameLogic,
             transition: this.handleTransitionState,
+            bonus: this.handleBonusMode,
             gameOver: this.handleGameOverState
         };
 
@@ -178,6 +191,17 @@ class GameManager {
         this.checkPowerUpsCollisions();
         this.handleGameOver();
         this.moveToNextGameStateIfNeeded();
+    };
+
+    handleBonusMode() {
+        this.drawBonusBackground();
+        this.spaceship.show();
+        this.drawElements(this.asteroids);
+        this.checkAsteroidCollisions();
+        this.spawnAsteroidsIfNeeded();
+        if (millis() - this.bonusStartTime > this.bonusDuration) {
+            this.gameState = "title";
+        }
     };
 
     handleGameOver() {
@@ -271,6 +295,30 @@ class GameManager {
             }
         }
     };
+
+    spawnAsteroidsIfNeeded() {
+        if (millis() - this.lastAsteroidTime > this.asteroidSpawnRate) {
+            this.asteroids.push(new Asteroid());
+            this.lastAsteroidTime = millis();
+        }
+        this.asteroids = this.asteroids.filter(a => !a.offScreen());
+    }
+
+    drawBonusBackground() {
+        this.scrollY += 2;
+        let y = this.scrollY % height;
+        image(this.bg, 0, y - height);
+        image(this.bg, 0, y);
+    }
+
+    checkAsteroidCollisions() {
+        for (let i = this.asteroids.length - 1; i >= 0; i--) {
+            if (this.spaceship.collidesWith(this.asteroids[i])) {
+                this.updateSpaceshipLives();
+                this.asteroids.splice(i, 1);
+            }
+        }
+    }
 
     handleAllEnemiesDestroyed() {
         // Si tous les ennemis sont détruits, passe à l'état de transition et prépare la prochaine vague
@@ -452,9 +500,22 @@ class GameManager {
     }
 
     handleKeyPressed() {
-        if ((this.gameState === "title" || this.gameState === "gameOver") && millis() - this.gameOverTime > 1000) { // Added this line
+        if (this.gameState === "title" && (key === 'b' || key === 'B')) {
+            this.startBonusMode();
+            return;
+        }
+        if ((this.gameState === "title" || this.gameState === "gameOver") && millis() - this.gameOverTime > 1000) {
             this.resetGame();
         }
+    }
+
+    startBonusMode() {
+        this.resetGame();
+        this.gameState = "bonus";
+        this.bonusStartTime = millis();
+        this.asteroids = [];
+        this.scrollY = 0;
+        this.lastAsteroidTime = millis();
     }
 
     pauseGame() {
