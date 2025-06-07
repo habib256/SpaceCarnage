@@ -500,7 +500,8 @@ class GameManager {
     }
 
     handleKeyPressed() {
-        if (this.gameState === "title" && (key === 'b' || key === 'B')) {
+        if (key === 'b' || key === 'B') {
+            // Le mode bonus peut être lancé à tout moment
             this.startBonusMode();
             return;
         }
