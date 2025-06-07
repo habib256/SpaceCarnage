@@ -31,8 +31,8 @@ function setup() {
 }
 
 function draw() {
-    if (gameManager.pauseGame == 1)
-    gameManager.manageGame();
+    if (gameManager.isRunning)
+        gameManager.manageGame();
 }
 
 function touchStarted() {
