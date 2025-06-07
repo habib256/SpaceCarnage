@@ -6,6 +6,14 @@ Bienvenue dans l'univers électrisant de Space Carnage, le jeu de tir spatial qu
 
 [Plongez dans la bataille spatiale et sauvez la galaxie dès maintenant !](https://habib256.github.io/SpaceCarnage/)
 
+## ⚙️ Installation / Exécution
+
+1. Clonez ce dépôt ou téléchargez ses sources.
+2. Depuis le dossier du projet, lancez un petit serveur local (par exemple `python3 -m http.server`).
+3. Ouvrez ensuite votre navigateur sur l'adresse affichée (généralement http://localhost:8000) et chargez `index.html`.
+
+Un serveur local est requis afin que p5.js puisse charger correctement les images du jeu.
+
 ### 🎯 Votre mission, si vous l'acceptez :
 
 - 🕹️ Maniez votre vaisseau avec virtuosité grâce à la souris.

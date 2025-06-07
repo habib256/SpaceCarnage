@@ -1,5 +1,3 @@
-let enemyBullets = []; // Added enemy bullets list
-
 class Enemy {
     constructor(images, size) {
         this.image = random(images); // Choose a random image from the array
