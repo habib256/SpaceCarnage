@@ -5,8 +5,6 @@ let bgImages = [];
 let explosionImages = [];
 let powerupImages = [];
 let gameManager;
-let coinImage;
-let dollarImage;
 let titleImage; // Added this line
 
 function preload() {

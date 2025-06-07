@@ -151,11 +151,11 @@ class GameManager {
     };
 
     drawLives() {
-    stroke(0);
-            strokeWeight(5);
-            fill(255);
-            textSize(24);
-            text("Ship: " + this.spaceship.lives, 5, 50); // Ajoutez cette ligne
+        stroke(0);
+        strokeWeight(5);
+        fill(255);
+        textSize(24);
+        text("Ship: " + this.spaceship.lives, 5, 50);
     };
 
     manageGame() {

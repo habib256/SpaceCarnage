@@ -20,7 +20,6 @@ SpaceCarnage/
 ├── explosion.js
 ├── gameManager.js
 ├── index.html
-├── laser.js
 ├── powerup.js
 ├── sketch.js
 ├── spaceship.js
@@ -139,7 +138,6 @@ Le code est modulaire et permet d'ajouter facilement :
 - `enemy.js` : Base des ennemis
 - `boss.js` : Ennemis spéciaux
 - `bullet.js` : Système de projectiles
-- `laser.js` : Projectiles spéciaux
 - `powerup.js` : Système de bonus
 - `explosion.js` : Effets visuels
 
