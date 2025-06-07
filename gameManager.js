@@ -224,7 +224,8 @@ class GameManager {
             this.gameState = "gameOver";
             this.gameOverTime = millis();
             // Si c'est la première vague, réinitialiser l'image de fond
-            this.bgImageIndex = 0; 
+            this.bgImageIndex = 0;
+            return; // Empêcher la transition vers l'état de jeu
         }
         // Passer à l'état de jeu après un délai donné
         if (millis() - this.transitionTime >= 2000) {
@@ -366,7 +367,7 @@ class GameManager {
         // Vérification des collisions avec les ennemis
         for (let i = this.enemies.length - 1; i >= 0; i--) {
             if (this.spaceship.collidesWith(this.enemies[i])) {
-                if (!this.spaceship.shieldActive) {
+                if (!this.spaceship.activeShield) {
                     this.updateSpaceshipLives();
                     this.enemies.splice(i, 1);
                 }

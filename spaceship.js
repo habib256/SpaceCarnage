@@ -119,8 +119,8 @@ class Spaceship {
     }
 
     enableDoubleShot(duration) {
-        this.doubleShotEnabled = true;
-        setTimeout(() => this.doubleShotEnabled = false, duration);
+        this.doubleShotActive = true;
+        setTimeout(() => this.doubleShotActive = false, duration);
     }
 
     boostSpeed(duration) {

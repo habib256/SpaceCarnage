@@ -35,6 +35,11 @@ class Bullet {
     }
 
     offScreen() {
-        return (this.y < 0 || this.y > height);
+        return (
+            this.y < 0 ||
+            this.y > height ||
+            this.x < 0 ||
+            this.x > width
+        );
     }
 }
