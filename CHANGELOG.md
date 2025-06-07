@@ -7,6 +7,11 @@ Toutes les modifications notables à ce projet seront documentées dans ce fichi
 - Ajout d'un **mode bonus** accessible depuis l'écran titre avec la touche **B**.
 - Dans ce mode, le vaisseau doit survivre à un champ d'astéroïdes en scrolling.
 - Mise à jour du titre pour informer de cette nouvelle fonctionnalité.
+=======
+## [0.4.5] - 2025-04-30 - Triple Shot Edition
+
+- Ajout du power-up **Triple Tir** offrant trois projectiles simultanés.
+- Mise à jour de la génération et de la collecte des power-ups pour prendre en charge ce nouveau bonus.
 
 ## [0.4.4] - 2025-03-30 - Power-Up Graphics Edition
 

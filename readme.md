@@ -42,7 +42,7 @@ Dans Space Carnage, chaque power-up est une clé magique qui peut renverser le c
   - **Effet** : Libérez une puissance de feu dévastatrice avec un double rayon laser qui annihile tout sur son passage !
   - **Durée** : 5 secondes de chaos explosif, prolongées à 10 secondes en mode boss !
 
-- **⚡ Triple Tir (tripleShot)**
+- **⚡ Triple Tir (tripleShot)** *(nouveau)*
   - **Effet** : Déchaînez un déluge de projectiles avec trois rayons simultanés pour une destruction maximale !
   - **Durée** : 6 secondes d'attaque dévastatrice, prolongées à 12 secondes en mode boss !
 

@@ -112,9 +112,14 @@ function loadPowerupImage() {
         () => { console.error('Erreur lors du chargement de l\'image doubleShot'); }
     );
     powerupImages.lateralShoot = loadImage(
-        'images/PowerUp04.png', 
+        'images/PowerUp04.png',
         () => { console.log('Image lateralShoot chargée avec succès'); },
         () => { console.error('Erreur lors du chargement de l\'image lateralShoot'); }
+    );
+    powerupImages.tripleShot = loadImage(
+        'images/PowerUp06.png',
+        () => { console.log('Image tripleShot chargée avec succès'); },
+        () => { console.error('Erreur lors du chargement de l\'image tripleShot'); }
     );
 }
 

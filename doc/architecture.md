@@ -85,7 +85,7 @@ SpaceCarnage/
 
 ### 3.1 Système de Combat
 - Tir simple et double
-- Triple tir (power-up)
+- Triple tir (power-up, nouveau)
 - Système de bouclier
 - Système de vies
 - Dégâts et destruction
@@ -96,7 +96,7 @@ Types disponibles :
 - Vie supplémentaire
 - Multiplicateur de points
 - Double tir
-- Triple tir
+- Triple tir (nouveau)
 
 ### 3.3 Système de Score
 - Points basés sur la destruction d'ennemis
