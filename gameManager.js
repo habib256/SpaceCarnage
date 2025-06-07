@@ -10,7 +10,8 @@ class GameManager {
         this.enemyBullets = [];
         this.explosions = [];
         this.gameOver = false;
-        this.pauseGame = true;
+        // indicates whether the main loop should run
+        this.isRunning = true;
         this.lastTouchX = 0;
         this.lastTouchY = 0;
         this.fireRate = 150; // 150 milliseconds = 0.1 seconds
@@ -459,12 +460,14 @@ class GameManager {
     pauseGame() {
         // Code pour mettre le jeu en pause
         this.gameState = "paused";
+        this.isRunning = false;
         console.log("Jeu en pause");
     }
 
     resumeGame() {
         // Code pour reprendre le jeu
         this.gameState = "game";
+        this.isRunning = true;
         console.log("Jeu repris");
     }
 
