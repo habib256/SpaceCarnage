@@ -34,15 +34,21 @@ function draw() {
 }
 
 function touchStarted() {
-    gameManager.handleTouchPressed();
+    if (gameManager) {
+        gameManager.handleTouchPressed();
+    }
 }
 
 function touchEnded() {
-    gameManager.handleTouchReleased();
+    if (gameManager) {
+        gameManager.handleTouchReleased();
+    }
 }
 
 function mousePressed() {
-    gameManager.handleMousePressed();
+    if (gameManager) {
+        gameManager.handleMousePressed();
+    }
 }
 
 function keyPressed() {
@@ -138,6 +144,9 @@ function goFullScreen() {
 }
 
 document.addEventListener('visibilitychange', function() {
+    if (!gameManager) {
+        return;
+    }
     if (document.hidden) {
         // Mettre le jeu en pause
         gameManager.pauseGame();
