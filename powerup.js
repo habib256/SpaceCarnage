@@ -11,7 +11,7 @@ class PowerUp {
     }
 
     getRandomType() {
-        const types = ['shield', 'extraLife', 'pointsMultiplier', 'doubleShot', 'lateralShoot'];
+        const types = ['shield', 'extraLife', 'pointsMultiplier', 'doubleShot', 'lateralShoot', 'tripleShot'];
         return types[Math.floor(Math.random() * types.length)];
     }
 
@@ -35,6 +35,8 @@ class PowerUp {
         if (this.type === 'lateralShoot') {
             scaleFactor = 1.5;
         } else if (this.type === 'doubleShot') {
+            scaleFactor = 1.3;
+        } else if (this.type === 'tripleShot') {
             scaleFactor = 1.3;
         }
         if (this.image) {

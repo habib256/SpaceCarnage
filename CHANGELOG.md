@@ -2,6 +2,11 @@
 
 Toutes les modifications notables à ce projet seront documentées dans ce fichier.
 
+## [0.4.5] - 2025-04-30 - Triple Shot Edition
+
+- Ajout du power-up **Triple Tir** offrant trois projectiles simultanés.
+- Mise à jour de la génération et de la collecte des power-ups pour prendre en charge ce nouveau bonus.
+
 ## [0.4.4] - 2025-03-30 - Power-Up Graphics Edition
 
 - Mise à jour complète des graphismes des power-ups (PowerUp00 à PowerUp05)

@@ -19,6 +19,8 @@ class Spaceship {
         this.doubleShotActive = false;
         // Propriété pour le lateral shoot
         this.lateralShootActive = false;
+        // Propriété pour le triple tir
+        this.tripleShotActive = false;
     }
 
     show() {
@@ -155,6 +157,10 @@ class Spaceship {
                     this.doubleShotActive = false;
                 }, 5000 * multiplier);
                 break;
+            case 'tripleShot':
+                // Active le triple tir pendant 6 secondes (6000 ms)
+                this.activateTripleShot(6000 * multiplier);
+                break;
             case 'lateralShoot':
                 // Activation de l'effet Latéral Shoot (durée de 6 secondes, multipliée si issu d'un boss)
                 this.activateLateralShoot(6000 * multiplier);
@@ -212,6 +218,13 @@ class Spaceship {
         }, duration);
     }
 
+    activateTripleShot(duration) {
+        this.tripleShotActive = true;
+        setTimeout(() => {
+            this.tripleShotActive = false;
+        }, duration);
+    }
+
     /**
      * Méthode pour refléter une balle lorsque celle-ci entre en collision avec le bouclier.
      * La direction de la balle est inversée en fonction de sa position relative au vaisseau.
@@ -262,8 +275,14 @@ class Spaceship {
         const centerX = this.x + this.size / 2;
         const centerY = this.y; // Tir depuis le haut du vaisseau
 
-        // Tir principal (simple ou double)
-        if (this.doubleShotActive) {
+        // Tir principal (simple, double ou triple)
+        if (this.tripleShotActive) {
+            const offset = 20;
+            const bulletCenter = new Bullet(centerX, centerY, 0, -1);
+            const bulletLeft = new Bullet(centerX - offset, centerY, 0, -1);
+            const bulletRight = new Bullet(centerX + offset, centerY, 0, -1);
+            projectiles.push(bulletCenter, bulletLeft, bulletRight);
+        } else if (this.doubleShotActive) {
             const offset = 15;
             const bulletLeft = new Bullet(centerX - offset, centerY, 0, -1);
             const bulletRight = new Bullet(centerX + offset, centerY, 0, -1);
