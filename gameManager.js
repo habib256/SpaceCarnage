@@ -421,7 +421,7 @@ class GameManager {
                             if (Math.random() < 0.4) {  // 40% de chances pour une extra life
                                 powerUp.type = 'extraLife';
                             } else {
-                                let allowedTypes = ['shield', 'pointsMultiplier', 'doubleShot', 'lateralShoot', 'tripleShot'];
+                                let allowedTypes = ['shield', 'pointsMultiplier', 'doubleShot', 'lateralShoot', 'tripleShot', 'skull'];
                                 powerUp.type = allowedTypes[Math.floor(Math.random() * allowedTypes.length)];
                             }
                             powerUp.image = powerUp.getImageForType(powerUp.type);
@@ -430,7 +430,7 @@ class GameManager {
                             this.score += 5;
                             // Pour les ennemis normaux, on exclut l'extraLife et on ne droppe le power-up qu'avec une probabilité de 40%
                             if (Math.random() < this.getAdjustedDropChance(0.4)) {
-                                let allowedTypes = ['shield', 'pointsMultiplier', 'doubleShot', 'lateralShoot', 'tripleShot'];
+                                let allowedTypes = ['shield', 'pointsMultiplier', 'doubleShot', 'lateralShoot', 'tripleShot', 'skull'];
                                 let chosenType = allowedTypes[Math.floor(Math.random() * allowedTypes.length)];
                                 
                                 let powerUp = new PowerUp(this.enemies[j].x, this.enemies[j].y, 16, this.powerupImages);

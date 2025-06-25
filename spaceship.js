@@ -165,6 +165,10 @@ class Spaceship {
                 // Activation de l'effet Latéral Shoot (durée de 6 secondes, multipliée si issu d'un boss)
                 this.activateLateralShoot(6000 * multiplier);
                 break;
+            case 'skull':
+                // Le crâne fait perdre une vie (avec protection contre les vies négatives)
+                this.loseLife("Crâne ramassé ! Vie perdue");
+                break;
             default:
                 console.warn(`Power-up inconnu : ${powerUp.type}`);
         }
@@ -177,8 +181,7 @@ class Spaceship {
                 this.deactivateShield();
             }
         } else {
-            this.lives--;
-            // Ajouter ici la gestion de la défaite si nécessaire
+            this.loseLife("Dégâts subis");
         }
     }
 
@@ -314,5 +317,25 @@ class Spaceship {
         setTimeout(() => {
             this.lateralShootActive = false;
         }, duration);
+    }
+
+    // Méthode utilitaire pour perdre une vie avec protection
+    loseLife(reason = "dégâts") {
+        if (this.lives > 0) {
+            this.lives--;
+            console.log(`${reason} ! Vies restantes :`, this.lives);
+            if (this.lives === 0) {
+                console.log("⚠️ GAME OVER ! Plus de vies restantes !");
+                // Déclencher le Game Over via le gameManager
+                if (typeof gameManager !== 'undefined' && gameManager) {
+                    gameManager.gameState = "gameOver";
+                    gameManager.gameOverTime = millis();
+                }
+                return true; // Indique que le Game Over a été déclenché
+            }
+        } else {
+            console.log(`${reason} mais aucune vie à perdre !`);
+        }
+        return false; // Pas de Game Over
     }
 }
