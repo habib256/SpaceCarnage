@@ -43,6 +43,15 @@ class GameManager {
         }
     };
 
+    /**
+     * Position stéréo d'une entité : un ennemi qui explose à gauche de l'écran
+     * s'entend à gauche.
+     */
+    panOf(entity) {
+        if (!entity || typeof soundManager === 'undefined' || !soundManager) return 0;
+        return soundManager.panFor(entity.x + (entity.size || 0) / 2);
+    };
+
     /** Nom de la piste musicale correspondant à la vague en cours. */
     currentMusicTrack() {
         return (this.wave % 5 === 0) ? 'boss' : 'game';
@@ -336,7 +345,7 @@ class GameManager {
     updateSpaceshipLives() {
         // Decrement spaceship's lives
         this.spaceship.lives--;
-        this.playSound('playPlayerHit');
+        this.playSound('playPlayerHit', this.panOf(this.spaceship));
         // If spaceship has no more lives, end the game
         if (this.spaceship.lives <= 0) {
             this.gameOver = true;
@@ -368,9 +377,10 @@ class GameManager {
             } else if (this.spaceship.doubleShotActive) {
                 shootMode = 'double';
             }
-            this.playSound('playShoot', shootMode);
+            const shipPan = this.panOf(this.spaceship);
+            this.playSound('playShoot', shootMode, shipPan);
             if (this.spaceship.lateralShootActive) {
-                this.playSound('playLateralShoot');
+                this.playSound('playLateralShoot', shipPan);
             }
         }
     }
@@ -380,7 +390,8 @@ class GameManager {
             let enemyBullet = this.enemies[i].shoot();
             if (enemyBullet !== null) {
                 this.enemyBullets.push(enemyBullet);
-                this.playSound(this.enemies[i] instanceof Boss ? 'playBossShoot' : 'playEnemyShoot');
+                this.playSound(this.enemies[i] instanceof Boss ? 'playBossShoot' : 'playEnemyShoot',
+                    this.panOf(this.enemies[i]));
             }
         }
     };
@@ -403,7 +414,7 @@ class GameManager {
     checkAsteroidCollisions() {
         for (let i = this.asteroids.length - 1; i >= 0; i--) {
             if (this.spaceship.collidesWith(this.asteroids[i])) {
-                this.playSound('playAsteroidCrash');
+                this.playSound('playAsteroidCrash', this.panOf(this.asteroids[i]));
                 this.updateSpaceshipLives();
                 this.asteroids.splice(i, 1);
             }
@@ -470,7 +481,7 @@ class GameManager {
             if (this.spaceship.collidesWith(this.enemyBullets[i])) {
                 if (this.spaceship.reflectBullet(this.enemyBullets[i])) {
                     // La balle a été réfléchie, on la transforme en balle du joueur
-                    this.playSound('playShieldBounce');
+                    this.playSound('playShieldBounce', this.panOf(this.enemyBullets[i]));
                     this.bullets.push(this.enemyBullets[i]);
                     this.enemyBullets.splice(i, 1);
                 } else {
@@ -498,14 +509,15 @@ class GameManager {
                     if (this.enemies[j] instanceof Boss) {
                         this.enemies[j].flashing = true;
                     }
+                    const enemyPan = this.panOf(this.enemies[j]);
                     if (this.enemies[j].health > 0) {
                         // L'ennemi encaisse : simple impact
-                        this.playSound('playHit');
+                        this.playSound('playHit', enemyPan);
                     }
                     if (this.enemies[j].health <= 0) {
                         let explosion = new Explosion(this.enemies[j].x, this.enemies[j].y, this.enemies[j].size, this.explosionImages);
                         this.explosions.push(explosion);
-                        this.playSound(this.enemies[j] instanceof Boss ? 'playBossExplosion' : 'playExplosion');
+                        this.playSound(this.enemies[j] instanceof Boss ? 'playBossExplosion' : 'playExplosion', enemyPan);
 
                         // Supprimez la vérification du bouclier ici
                         let powerUp;
@@ -522,7 +534,7 @@ class GameManager {
                             }
                             powerUp.image = powerUp.getImageForType(powerUp.type);
                             this.powerUps.push(powerUp);
-                            this.playSound('playPowerUpDrop');
+                            this.playSound('playPowerUpDrop', this.panOf(powerUp));
                         } else {
                             this.score += 5;
                             // Pour les ennemis normaux, on exclut l'extraLife et on ne droppe le power-up qu'avec une probabilité de 40%
@@ -534,7 +546,7 @@ class GameManager {
                                 powerUp.type = chosenType;
                                 powerUp.image = powerUp.getImageForType(chosenType);
                                 this.powerUps.push(powerUp);
-                                this.playSound('playPowerUpDrop');
+                                this.playSound('playPowerUpDrop', this.panOf(powerUp));
                             }
                         }
                         this.enemies.splice(j, 1);
@@ -555,7 +567,7 @@ class GameManager {
             // Si le vaisseau entre en collision avec le power-up
             if (this.spaceship.collidesWith(this.powerUps[i])) {
                 // Jouer la signature sonore du bonus avant de l'appliquer
-                this.playSound('playPowerUp', this.powerUps[i].type);
+                this.playSound('playPowerUp', this.powerUps[i].type, this.panOf(this.powerUps[i]));
                 // Appliquer l'effet du power-up directement via collectPowerUp()
                 this.spaceship.collectPowerUp(this.powerUps[i]);
                 // Supprimer le power-up après récupération

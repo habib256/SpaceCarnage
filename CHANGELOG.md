@@ -2,6 +2,19 @@
 
 Toutes les modifications notables à ce projet seront documentées dans ce fichier.
 
+## [0.6.1] - 2026-08-04 - Better Sound Effects Edition
+
+- **Bruitages entièrement retravaillés**, désormais construits en plusieurs couches (transitoire, corps, queue) au lieu de simples balayages de fréquence.
+- Ajout de la **synthèse FM** (`SoundManager.fm()`) : les tirs, impacts et ricochets de bouclier gagnent un timbre métallique impossible à obtenir en synthèse soustractive.
+- Ajout d'une **réverbération spatiale** générée à la volée (convolueur alimenté par une réponse impulsionnelle de bruit décroissant) : explosions et bonus gagnent en profondeur.
+- Ajout du **panoramique stéréo** : un ennemi qui explose à gauche de l'écran s'entend à gauche. Chaque bruitage suit la position de l'entité concernée.
+- Ajout de la **saturation** (`WaveShaper`) pour donner du grain aux tirs ennemis, aux explosions et à l'alarme des boss, et du **vibrato** (LFO) pour les sons tenus.
+- Les explosions projettent maintenant une **pluie de débris** (micro-salves de bruit dispersées et pannées aléatoirement) et les explosions de boss détonnent en trois temps.
+- Légère **variation aléatoire de hauteur** sur les sons répétitifs pour supprimer l'effet mitraillette.
+- Enveloppes enrichies d'un palier de maintien (`hold`) pour des sons plus francs.
+- **Rééquilibrage complet du mixage** : les sons fréquents (tirs, impacts) ont été remontés et les sons rares (game over, alerte de boss) adoucis, après mesure du pic et du niveau efficace de chaque effet.
+- Ajout d'un **budget de voix** (80 maximum) qui protège le frame rate lorsque l'écran s'embrase.
+
 ## [0.6.0] - 2026-08-04 - Sound Edition
 
 - Ajout de **soundManager.js**, un moteur audio 100% procédural basé sur la Web Audio API : aucun fichier son n'est nécessaire, tout est synthétisé en temps réel.

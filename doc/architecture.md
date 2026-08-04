@@ -77,9 +77,20 @@ SpaceCarnage/
 
 #### SoundManager (soundManager.js)
 - Moteur audio 100% procédural (Web Audio API), sans aucun fichier son
-- Graphe de mixage : `master` → compresseur → sortie, avec deux bus (`sfxBus`, `musicBus`)
-- Briques de synthèse réutilisables : `tone()` (oscillateur + enveloppe),
-  `noise()` (bruit blanc filtré) et `jingle()` (suite de notes MIDI)
+- Graphe de mixage : voix → [filtre] → enveloppe → panoramique → bus
+  (`sfxBus` / `musicBus`) → `master` → compresseur → sortie, avec un départ
+  vers un bus de réverbération à convolution (réponse impulsionnelle générée)
+- Briques de synthèse réutilisables :
+  - `tone()` : oscillateur avec balayage, vibrato, filtre et saturation
+  - `fm()` : synthèse par modulation de fréquence (timbres métalliques)
+  - `noise()` : bruit blanc filtré, avec balayage de filtre
+  - `debris()` : micro-salves dispersées, pour les queues d'explosion
+  - `jingle()` : suite de notes MIDI avec doublure à l'octave optionnelle
+- Bruitages construits en couches (transitoire, corps, queue) et légèrement
+  randomisés en hauteur pour éviter la répétition mécanique
+- Panoramique dérivé de la position à l'écran via `panFor()` / `GameManager.panOf()`
+- Budget de voix (`maxVoices`) et anti-mitraillage (`throttle()`) pour préserver
+  le frame rate
 - Séquenceur musical à planification anticipée (`lookAhead`) pour des boucles
   chiptune régulières, indépendantes du frame rate de p5.js
 - Gestion du déblocage audio, de la coupure du son et de la mise en veille
@@ -117,6 +128,8 @@ Types disponibles :
   `boss`, `bonus`), pilotée par `GameManager.updateAudioState()`
 - Bruitages déclenchés depuis les points de gameplay via `GameManager.playSound()`,
   un appel sécurisé qui laisse le jeu fonctionner si l'audio est indisponible
+- Spatialisation stéréo : chaque bruitage reçoit la position de l'entité
+  concernée, calculée par `GameManager.panOf()`
 - Le contexte audio est créé puis réveillé au premier geste utilisateur
   (`SoundManager.unlock()` appelé depuis `sketch.js`)
 - Coupure du son avec la touche M, persistée dans le localStorage

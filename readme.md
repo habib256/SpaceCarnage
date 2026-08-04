@@ -80,12 +80,20 @@ télécharger : **tout est synthétisé en temps réel** par la Web Audio API.
 - 🎵 **Musique chiptune dynamique** : un thème pour l'écran titre, un thème
   nerveux en combat, un thème menaçant lors des vagues de boss et une ritournelle
   bondissante pour le mode astéroïdes. La bascule est automatique.
-- 💥 **Bruitages réactifs** : tirs (simple, double, triple, latéral), tirs
-  ennemis et de boss, impacts, explosions, ricochets sur le bouclier, crashs
-  d'astéroïdes… chaque power-up possède même sa propre signature sonore, du
-  carillon de la vie supplémentaire au glissando maléfique du crâne.
-- 🎚️ **Mixage maîtrisé** : un compresseur en sortie empêche la saturation quand
-  l'écran s'embrase.
+- 💥 **Bruitages multi-couches** : chaque son est bâti comme en studio —
+  transitoire claquant, corps métallique en synthèse FM, queue harmonique et
+  pluie de débris. Tirs (simple, double, triple, latéral), tirs ennemis et de
+  boss, impacts, explosions, ricochets sur le bouclier, crashs d'astéroïdes…
+  chaque power-up possède même sa propre signature sonore, du carillon de la vie
+  supplémentaire au triton maléfique du crâne.
+- 🎧 **Panoramique stéréo** : un ennemi qui explose à gauche de l'écran
+  s'entend à gauche. Mettez un casque, la bataille se déploie autour de vous.
+- 🌌 **Réverbération spatiale** générée à la volée : les explosions résonnent
+  comme dans le vide interstellaire (bon, le vide ne résonne pas, mais l'arcade
+  n'a jamais eu ce genre de scrupule).
+- 🎚️ **Mixage maîtrisé** : chaque effet a été mesuré puis calibré, un budget de
+  voix protège la fluidité et un compresseur en sortie empêche la saturation
+  quand l'écran s'embrase.
 - 🔇 **Touche M** : coupe ou rétablit le son à tout moment ; votre choix est
   mémorisé pour vos prochaines sessions.
 
