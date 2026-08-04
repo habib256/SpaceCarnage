@@ -86,6 +86,9 @@ SpaceCarnage/
   - `noise()` : bruit blanc filtré, avec balayage de filtre
   - `debris()` : micro-salves dispersées, pour les queues d'explosion
   - `jingle()` : suite de notes MIDI avec doublure à l'octave optionnelle
+  - `shapeVoice()` : mise en forme partagée du timbre — saturation (`grit`),
+    quantification 8 bits (`crush`) et modulation en anneau (`ring`)
+  - `duck()` : atténuation temporaire de la musique sous un événement marquant
 - Bruitages construits en couches (transitoire, corps, queue) et légèrement
   randomisés en hauteur pour éviter la répétition mécanique
 - Panoramique dérivé de la position à l'écran via `panFor()` / `GameManager.panOf()`
@@ -132,6 +135,8 @@ Types disponibles :
   concernée, calculée par `GameManager.panOf()`
 - Le contexte audio est créé puis réveillé au premier geste utilisateur
   (`SoundManager.unlock()` appelé depuis `sketch.js`)
+- Repères sonores d'état : chute du bouclier et expiration des bonus depuis
+  `Spaceship`, alarme de dernière vie, fanfare de record battu au game over
 - Coupure du son avec la touche M, persistée dans le localStorage
 - Suspension/reprise du contexte lorsque le jeu est mis en pause
 

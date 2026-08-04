@@ -24,7 +24,12 @@ class SoundManager {
         this.reverbBus = null;
         this.noiseBuffer = null;
         this.gritCurve = null;
+        this.crushCurve = null;
         this.ready = false;
+
+        // Rotation de timbres sur le tir du joueur : trois variantes qui
+        // alternent pour que la mitraille ne sonne jamais deux fois pareil.
+        this.shotVariant = 0;
 
         this.masterVolume = 0.8;
         this.sfxVolume = 0.9;
@@ -93,6 +98,7 @@ class SoundManager {
 
         this.noiseBuffer = this.createNoiseBuffer();
         this.gritCurve = SoundManager.createDistortionCurve(12);
+        this.crushCurve = SoundManager.createCrushCurve(9);
         this.buildReverb();
 
         this.ready = true;
@@ -167,6 +173,83 @@ class SoundManager {
             curve[i] = ((1 + amount) * x) / (1 + amount * Math.abs(x));
         }
         return curve;
+    }
+
+    /**
+     * Courbe de quantification : elle réduit le signal à un nombre fixe de
+     * paliers d'amplitude, exactement comme un convertisseur 8 bits. C'est le
+     * craquement typique des bornes d'arcade.
+     */
+    static createCrushCurve(levels) {
+        const samples = 2048;
+        const curve = new Float32Array(samples);
+        for (let i = 0; i < samples; i++) {
+            const x = (i * 2) / samples - 1;
+            curve[i] = Math.round(x * levels) / levels;
+        }
+        return curve;
+    }
+
+    /**
+     * Applique la mise en forme optionnelle du timbre à une voix :
+     * saturation (`grit`), quantification 8 bits (`crush`) et modulation en
+     * anneau (`ring`). Renvoie le dernier nœud de la chaîne.
+     */
+    shapeVoice(node, o, start, duration) {
+        const ctx = this.ctx;
+        if (o.grit) {
+            const shaper = ctx.createWaveShaper();
+            shaper.curve = this.gritCurve;
+            const drive = ctx.createGain();
+            drive.gain.value = o.grit;
+            node.connect(drive);
+            drive.connect(shaper);
+            node = shaper;
+        }
+        if (o.crush) {
+            const crusher = ctx.createWaveShaper();
+            crusher.curve = this.crushCurve;
+            crusher.oversample = 'none'; // l'aliasing fait partie du charme
+            const drive = ctx.createGain();
+            drive.gain.value = o.crush;
+            node.connect(drive);
+            drive.connect(crusher);
+            node = crusher;
+        }
+        if (o.ring) {
+            // Modulation en anneau : le signal est multiplié par une sinusoïde,
+            // ce qui crée des partiels inharmoniques (timbres « extraterrestres »).
+            const ringOsc = ctx.createOscillator();
+            ringOsc.frequency.setValueAtTime(o.ring, start);
+            if (o.endRing) {
+                ringOsc.frequency.exponentialRampToValueAtTime(
+                    Math.max(1, o.endRing), start + duration);
+            }
+            const ringGain = ctx.createGain();
+            ringGain.gain.value = 0;
+            node.connect(ringGain);
+            ringOsc.connect(ringGain.gain);
+            ringOsc.start(start);
+            ringOsc.stop(start + duration + 0.02);
+            node = ringGain;
+        }
+        return node;
+    }
+
+    /**
+     * Abaisse brièvement la musique sous un événement marquant, comme le fait
+     * un compresseur à chaîne latérale en production musicale. L'explosion
+     * gagne la place qu'il lui faut sans qu'on touche à son volume.
+     */
+    duck(amount = 0.35, duration = 0.5) {
+        if (!this.ready || this.muted || !this.musicBus) return;
+        const now = this.ctx.currentTime;
+        const gain = this.musicBus.gain;
+        const floor = this.musicVolume * (1 - Math.max(0, Math.min(0.9, amount)));
+        gain.cancelScheduledValues(now);
+        gain.setValueAtTime(gain.value, now);
+        gain.linearRampToValueAtTime(floor, now + 0.025);
+        gain.linearRampToValueAtTime(this.musicVolume, now + duration);
     }
 
     /* ------------------------------------------------------------------ */
@@ -314,16 +397,8 @@ class SoundManager {
             lfo.stop(start + duration + 0.02);
         }
 
-        // Saturation douce : ajoute des harmoniques et de l'épaisseur.
-        if (o.grit) {
-            const shaper = ctx.createWaveShaper();
-            shaper.curve = this.gritCurve;
-            const drive = ctx.createGain();
-            drive.gain.value = o.grit;
-            node.connect(drive);
-            drive.connect(shaper);
-            node = shaper;
-        }
+        // Saturation, quantification 8 bits et modulation en anneau.
+        node = this.shapeVoice(node, o, start, duration);
 
         // Filtre optionnel, avec balayage possible.
         if (o.filter) {
@@ -383,16 +458,7 @@ class SoundManager {
         modulator.connect(modGain);
         modGain.connect(carrier.frequency);
 
-        let node = carrier;
-        if (o.grit) {
-            const shaper = ctx.createWaveShaper();
-            shaper.curve = this.gritCurve;
-            const drive = ctx.createGain();
-            drive.gain.value = o.grit;
-            node.connect(drive);
-            drive.connect(shaper);
-            node = shaper;
-        }
+        const node = this.shapeVoice(carrier, o, start, duration);
 
         const env = this.buildOutput(o, start, duration);
         node.connect(env);
@@ -430,17 +496,8 @@ class SoundManager {
                 Math.max(40, o.endFilterFreq), start + duration);
         }
 
-        let node = filter;
         src.connect(filter);
-        if (o.grit) {
-            const shaper = ctx.createWaveShaper();
-            shaper.curve = this.gritCurve;
-            const drive = ctx.createGain();
-            drive.gain.value = o.grit;
-            node.connect(drive);
-            drive.connect(shaper);
-            node = shaper;
-        }
+        const node = this.shapeVoice(filter, o, start, duration);
 
         const env = this.buildOutput(o, start, duration);
         node.connect(env);
@@ -531,6 +588,12 @@ class SoundManager {
         const base = SoundManager.vary(
             mode === 'triple' ? 1500 : (mode === 'double' ? 1350 : 1250), 45);
 
+        // Trois rapports de modulation qui alternent : le canon respire au
+        // lieu de répéter mécaniquement le même timbre.
+        const ratios = [2.7, 3.4, 1.9];
+        const ratio = ratios[this.shotVariant % ratios.length];
+        this.shotVariant++;
+
         // Claquement initial
         this.noise({
             duration: 0.035, gain: 0.14, filterFreq: 5000, endFilterFreq: 1800,
@@ -538,7 +601,7 @@ class SoundManager {
         });
         // Corps FM : rapport non entier pour le côté « laser »
         this.fm({
-            freq: base, endFreq: base * 0.18, ratio: 2.7,
+            freq: base, endFreq: base * 0.18, ratio: ratio,
             index: base * 1.4, endIndex: base * 0.05,
             duration: 0.11, gain: 0.26, hold: 0.012, pan: pan, send: 0.08
         });
@@ -622,7 +685,7 @@ class SoundManager {
         if (!this.throttle('hit', 0.025)) return;
         this.noise({
             duration: 0.08, gain: 0.32, filterFreq: 4200, endFilterFreq: 1100,
-            filterType: 'bandpass', q: 2, pan: pan
+            filterType: 'bandpass', q: 2, crush: 1.4, pan: pan
         });
         this.fm({
             freq: SoundManager.vary(880, 120), endFreq: 300, ratio: 3.7,
@@ -637,10 +700,16 @@ class SoundManager {
      */
     playExplosion(pan = 0) {
         if (!this.throttle('explosion', 0.035)) return;
-        // Souffle principal
+        // La musique s'efface un instant pour laisser passer la détonation
+        this.duck(0.3, 0.45);
+        // Souffle principal, décorrélé à gauche et à droite pour l'ampleur
         this.noise({
-            duration: 0.5, gain: 0.38, filterFreq: 2800, endFilterFreq: 110,
-            q: 1.4, attack: 0.002, pan: pan, send: 0.28
+            duration: 0.5, gain: 0.3, filterFreq: 2800, endFilterFreq: 110,
+            q: 1.4, attack: 0.002, pan: pan - 0.3, send: 0.28
+        });
+        this.noise({
+            duration: 0.46, gain: 0.3, filterFreq: 2500, endFilterFreq: 130,
+            q: 1.4, attack: 0.002, pan: pan + 0.3, send: 0.28
         });
         // Corps saturé qui donne le « punch »
         this.noise({
@@ -657,10 +726,16 @@ class SoundManager {
 
     /** Explosion d'un boss : détonation en trois temps, longue et caverneuse. */
     playBossExplosion(pan = 0) {
-        // Détonation initiale
+        // Le thème du boss s'écrase sous la détonation, puis revient
+        this.duck(0.6, 1.1);
+        // Détonation initiale, élargie sur les deux canaux
         this.noise({
-            duration: 1.0, gain: 0.4, filterFreq: 2200, endFilterFreq: 60,
-            q: 1.2, attack: 0.002, pan: pan, send: 0.45
+            duration: 1.0, gain: 0.32, filterFreq: 2200, endFilterFreq: 60,
+            q: 1.2, attack: 0.002, pan: pan - 0.35, send: 0.45
+        });
+        this.noise({
+            duration: 0.92, gain: 0.32, filterFreq: 1900, endFilterFreq: 70,
+            q: 1.2, attack: 0.002, pan: pan + 0.35, send: 0.45
         });
         this.tone({
             freq: 130, endFreq: 28, type: 'triangle',
@@ -669,7 +744,7 @@ class SoundManager {
         // Grondement saturé
         this.noise({
             duration: 0.7, gain: 0.14, filterFreq: 420, endFilterFreq: 90,
-            filterType: 'lowpass', q: 4, grit: 9, pan: pan
+            filterType: 'lowpass', q: 4, grit: 9, crush: 1.2, pan: pan
         });
         // Répliques
         this.noise({
@@ -692,6 +767,7 @@ class SoundManager {
      * s'effondre, pour que la perte de vie s'entende immédiatement.
      */
     playPlayerHit(pan = 0) {
+        this.duck(0.65, 0.9);
         this.noise({
             duration: 0.75, gain: 0.36, filterFreq: 2400, endFilterFreq: 80,
             attack: 0.002, pan: pan, send: 0.35
@@ -784,6 +860,7 @@ class SoundManager {
                 this.tone({
                     freq: 480, endFreq: 62, type: 'sawtooth', duration: 0.7,
                     gain: 0.2, grit: 8, vibrato: 6, vibratoDepth: 60, pan: pan, send: 0.35,
+                    ring: 190, endRing: 40, crush: 1.3,
                     filter: 'lowpass', filterFreq: 2600, endFilterFreq: 180, q: 6
                 });
                 // Triton : l'intervalle du diable, une quarte augmentée au-dessus
@@ -806,6 +883,7 @@ class SoundManager {
 
     /** Collision avec un astéroïde : impact rocheux, mat et graveleux. */
     playAsteroidCrash(pan = 0) {
+        this.duck(0.4, 0.6);
         this.noise({
             duration: 0.45, gain: 0.36, filterFreq: 1100, endFilterFreq: 70,
             q: 2, attack: 0.002, pan: pan, send: 0.3
@@ -858,6 +936,7 @@ class SoundManager {
 
     /** Thème de game over : descente chromatique et effondrement final. */
     playGameOver() {
+        this.duck(0.7, 1.5);
         this.jingle([
             { midi: 64, dur: 0.22 }, { midi: 61, dur: 0.22 }, { midi: 57, dur: 0.22 }
         ], { type: 'triangle', gain: 0.2, send: 0.35, shimmer: 0.2 });
@@ -887,6 +966,98 @@ class SoundManager {
             freq: SoundManager.midiToFreq(48), endFreq: SoundManager.midiToFreq(60),
             type: 'sawtooth', duration: 0.4, gain: 0.12, sweepType: 'linear',
             filter: 'lowpass', filterFreq: 400, endFilterFreq: 3000, q: 5
+        });
+    }
+
+    /**
+     * Le bouclier se dissipe : la montée du ramassage jouée à l'envers, pour
+     * que l'oreille comprenne immédiatement que la protection est tombée.
+     */
+    playShieldDown() {
+        this.tone({
+            freq: 900, endFreq: 260, type: 'sawtooth', duration: 0.4,
+            gain: 0.17, send: 0.25,
+            filter: 'lowpass', filterFreq: 4500, endFilterFreq: 400, q: 8
+        });
+        this.fm({
+            freq: 1100, endFreq: 420, ratio: 1.41, index: 300, endIndex: 20,
+            duration: 0.35, gain: 0.08, delay: 0.03, send: 0.3
+        });
+    }
+
+    /** Un bonus de tir arrive à expiration : brève descente résignée. */
+    playPowerDown() {
+        this.tone({
+            freq: 660, endFreq: 330, type: 'square', duration: 0.16,
+            gain: 0.1, crush: 1.2, send: 0.15
+        });
+        this.tone({
+            freq: 495, endFreq: 247, type: 'square', duration: 0.18,
+            gain: 0.08, delay: 0.09, crush: 1.2, send: 0.15
+        });
+    }
+
+    /**
+     * Il ne reste qu'une vie : alarme de coque à deux tons, plus tendue que
+     * l'alerte des boss et volontairement sèche pour ne pas gêner le jeu.
+     */
+    playLastLifeWarning() {
+        if (!this.throttle('lastLife', 3)) return;
+        for (let i = 0; i < 2; i++) {
+            this.tone({
+                freq: 880, endFreq: 660, type: 'square', duration: 0.16,
+                gain: 0.15, delay: 0.5 + i * 0.24, send: 0.3, crush: 1.3,
+                pan: i === 0 ? -0.4 : 0.4, sweepType: 'linear'
+            });
+            this.tone({
+                freq: 440, endFreq: 330, type: 'sawtooth', duration: 0.16,
+                gain: 0.08, delay: 0.5 + i * 0.24, grit: 4, sweepType: 'linear'
+            });
+        }
+    }
+
+    /** Record battu : la fanfare que l'on vient chercher dans une salle d'arcade. */
+    playHighScore() {
+        this.duck(0.5, 2.2);
+        const melody = [
+            { midi: 72, dur: 0.12 }, { midi: 76, dur: 0.12 }, { midi: 79, dur: 0.12 },
+            { midi: 84, dur: 0.12 }, { midi: 81, dur: 0.12 }, { midi: 84, dur: 0.5 }
+        ];
+        this.jingle(melody, { type: 'square', gain: 0.27, send: 0.35, shimmer: 0.4, pan: -0.2 });
+        // Contrechant à la tierce, légèrement décalé : l'effet « deux voix »
+        this.jingle(melody.map(n => ({ midi: n.midi - 4, dur: n.dur })),
+            { type: 'triangle', gain: 0.16, send: 0.35, delay: 0.03, pan: 0.2 });
+        // Scintillement final
+        for (let i = 0; i < 6; i++) {
+            this.tone({
+                freq: SoundManager.midiToFreq(88 + (i % 3) * 4), type: 'sine',
+                duration: 0.12, gain: 0.09, delay: 0.7 + i * 0.07,
+                send: 0.5, pan: (i % 2 === 0 ? -0.5 : 0.5)
+            });
+        }
+    }
+
+    /** Fin du mode bonus : petite cadence de retour au calme. */
+    playBonusEnd() {
+        this.jingle([
+            { midi: 81, dur: 0.1 }, { midi: 77, dur: 0.1 },
+            { midi: 74, dur: 0.1 }, { midi: 69, dur: 0.3 }
+        ], { type: 'triangle', gain: 0.17, send: 0.3, shimmer: 0.25 });
+    }
+
+    /**
+     * Passage d'un astéroïde : souffle filtré qui traverse le champ stéréo.
+     * Il donne au mode bonus une texture continue plutôt qu'un silence.
+     */
+    playAsteroidWhoosh(pan = 0, size = 1) {
+        if (!this.throttle('whoosh', 0.25)) return;
+        // Les gros rochers grondent plus bas et plus longtemps
+        const scale = Math.max(0.5, Math.min(1.6, size));
+        this.noise({
+            duration: 0.45 * scale, gain: 0.14,
+            filterFreq: 900 / scale, endFilterFreq: 220 / scale,
+            filterType: 'bandpass', q: 1.2, attack: 0.12,
+            pan: pan, send: 0.25
         });
     }
 

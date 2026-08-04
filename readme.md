@@ -91,6 +91,11 @@ télécharger : **tout est synthétisé en temps réel** par la Web Audio API.
 - 🌌 **Réverbération spatiale** générée à la volée : les explosions résonnent
   comme dans le vide interstellaire (bon, le vide ne résonne pas, mais l'arcade
   n'a jamais eu ce genre de scrupule).
+- 🥁 **La musique s'efface sous les explosions** (ducking) : chaque détonation
+  se fait sa place dans le mix, exactement comme dans une production musicale.
+- 🔔 **Le son vous informe** : le bouclier qui tombe, un bonus qui expire, la
+  dernière vie qui clignote, le mode bonus qui s'achève — et une **fanfare
+  triomphale** quand vous battez le record.
 - 🎚️ **Mixage maîtrisé** : chaque effet a été mesuré puis calibré, un budget de
   voix protège la fluidité et un compresseur en sortie empêche la saturation
   quand l'écran s'embrase.

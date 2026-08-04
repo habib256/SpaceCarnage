@@ -49,7 +49,11 @@ class GameManager {
      */
     panOf(entity) {
         if (!entity || typeof soundManager === 'undefined' || !soundManager) return 0;
-        return soundManager.panFor(entity.x + (entity.size || 0) / 2);
+        // Les astéroïdes sont dessinés centrés sur (x, y), les autres entités
+        // depuis leur coin supérieur gauche.
+        const centered = (typeof Asteroid !== 'undefined' && entity instanceof Asteroid);
+        const centerX = centered ? entity.x : entity.x + (entity.size || 0) / 2;
+        return soundManager.panFor(centerX);
     };
 
     /** Nom de la piste musicale correspondant à la vague en cours. */
@@ -84,10 +88,18 @@ class GameManager {
                 case "bonus":
                     this.playSound('setMusic', 'bonus');
                     break;
-                case "gameOver":
+                case "gameOver": {
                     this.playSound('setMusic', null);
-                    this.playSound('playGameOver');
+                    // Le nouveau record n'est écrit qu'ensuite par drawGameOver :
+                    // on peut donc encore le comparer au précédent.
+                    const best = parseInt(localStorage.getItem('highScore'), 10);
+                    if (this.score > 0 && (isNaN(best) || this.score > best)) {
+                        this.playSound('playHighScore');
+                    } else {
+                        this.playSound('playGameOver');
+                    }
                     break;
+                }
             }
             this.lastAudioState = this.gameState;
         } else if (this.gameState === "game") {
@@ -285,6 +297,7 @@ class GameManager {
         this.checkAsteroidCollisions();
         this.spawnAsteroidsIfNeeded();
         if (millis() - this.bonusStartTime > this.bonusDuration) {
+            this.playSound('playBonusEnd');
             this.gameState = "title";
         }
     };
@@ -346,6 +359,9 @@ class GameManager {
         // Decrement spaceship's lives
         this.spaceship.lives--;
         this.playSound('playPlayerHit', this.panOf(this.spaceship));
+        if (this.spaceship.lives === 1) {
+            this.playSound('playLastLifeWarning');
+        }
         // If spaceship has no more lives, end the game
         if (this.spaceship.lives <= 0) {
             this.gameOver = true;
@@ -398,7 +414,10 @@ class GameManager {
 
     spawnAsteroidsIfNeeded() {
         if (millis() - this.lastAsteroidTime > this.asteroidSpawnRate) {
-            this.asteroids.push(new Asteroid());
+            const asteroid = new Asteroid();
+            this.asteroids.push(asteroid);
+            // Le souffle suit la taille du rocher : les gros grondent plus bas
+            this.playSound('playAsteroidWhoosh', this.panOf(asteroid), asteroid.size / 50);
             this.lastAsteroidTime = millis();
         }
         this.asteroids = this.asteroids.filter(a => !a.offScreen());

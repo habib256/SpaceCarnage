@@ -2,6 +2,24 @@
 
 Toutes les modifications notables à ce projet seront documentées dans ce fichier.
 
+## [0.6.2] - 2026-08-04 - Sound Design Edition
+
+- **Ducking musical** : la musique s'efface brièvement sous les explosions, la perte de vie et le game over, comme un compresseur à chaîne latérale. Les impacts gagnent en poids sans monter le volume.
+- **Six nouveaux repères sonores** pour des événements jusque-là muets :
+  - chute du bouclier (la montée du ramassage jouée à l'envers),
+  - expiration d'un bonus de tir,
+  - alarme de dernière vie, calée juste après l'explosion pour rester lisible,
+  - **fanfare de record battu**, qui remplace le thème de défaite quand le meilleur score tombe,
+  - cadence de fin du mode bonus,
+  - souffle des astéroïdes qui entrent dans le champ, dont la hauteur suit la taille du rocher.
+- **Quantification 8 bits** (`crush`) : le craquement des convertisseurs d'époque, sur les impacts, le grondement des boss et l'alarme de dernière vie.
+- **Modulation en anneau** (`ring`) : partiels inharmoniques pour le crâne, qui sonne enfin aussi faux qu'il est maléfique.
+- **Largeur stéréo** : les explosions sont désormais composées de deux souffles décorrélés panoramiqués à gauche et à droite.
+- **Rotation de timbres sur le tir du joueur** : trois rapports de modulation alternent, la mitraille ne se répète plus mécaniquement.
+- Panoramique corrigé pour les astéroïdes, dessinés centrés et non depuis leur coin.
+- Factorisation de la mise en forme du timbre dans `shapeVoice()`, partagée par `tone()`, `fm()` et `noise()`.
+- Nouveau rééquilibrage après mesure : compensation des 3 dB perdus par la décorrélation stéréo des explosions.
+
 ## [0.6.1] - 2026-08-04 - Better Sound Effects Edition
 
 - **Bruitages entièrement retravaillés**, désormais construits en plusieurs couches (transitoire, corps, queue) au lieu de simples balayages de fréquence.

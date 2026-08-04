@@ -23,6 +23,16 @@ class Spaceship {
         this.tripleShotActive = false;
     }
 
+    /**
+     * Appel sécurisé au moteur audio : le vaisseau reste fonctionnel même si
+     * le SoundManager n'a pas pu s'initialiser.
+     */
+    playSound(method, ...args) {
+        if (typeof soundManager !== 'undefined' && soundManager && typeof soundManager[method] === 'function') {
+            soundManager[method](...args);
+        }
+    }
+
     show() {
         image(this.image, this.x, this.y, this.size, this.size);
         if (this.activeShield) {
@@ -120,7 +130,10 @@ class Spaceship {
 
     enableDoubleShot(duration) {
         this.doubleShotActive = true;
-        setTimeout(() => this.doubleShotActive = false, duration);
+        setTimeout(() => {
+            this.doubleShotActive = false;
+            this.playSound('playPowerDown');
+        }, duration);
     }
 
     boostSpeed(duration) {
@@ -155,6 +168,7 @@ class Spaceship {
                 this.doubleShotActive = true;
                 setTimeout(() => {
                     this.doubleShotActive = false;
+                    this.playSound('playPowerDown');
                 }, 5000 * multiplier);
                 break;
             case 'tripleShot':
@@ -202,6 +216,10 @@ class Spaceship {
     }
 
     deactivateShield() {
+        // Ne sonner que si le bouclier était effectivement en place
+        if (this.activeShield) {
+            this.playSound('playShieldDown');
+        }
         this.activeShield = false;
         this.shieldResistance = 0;
         this.shieldTimeout = null;
@@ -218,6 +236,7 @@ class Spaceship {
         this.doubleShotActive = true;
         setTimeout(() => {
             this.doubleShotActive = false;
+            this.playSound('playPowerDown');
         }, duration);
     }
 
@@ -225,6 +244,7 @@ class Spaceship {
         this.tripleShotActive = true;
         setTimeout(() => {
             this.tripleShotActive = false;
+            this.playSound('playPowerDown');
         }, duration);
     }
 
@@ -316,6 +336,7 @@ class Spaceship {
         this.lateralShootActive = true;
         setTimeout(() => {
             this.lateralShootActive = false;
+            this.playSound('playPowerDown');
         }, duration);
     }
 
@@ -324,6 +345,9 @@ class Spaceship {
         if (this.lives > 0) {
             this.lives--;
             console.log(`${reason} ! Vies restantes :`, this.lives);
+            if (this.lives === 1) {
+                this.playSound('playLastLifeWarning');
+            }
             if (this.lives === 0) {
                 console.log("⚠️ GAME OVER ! Plus de vies restantes !");
                 // Déclencher le Game Over via le gameManager
