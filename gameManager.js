@@ -29,7 +29,62 @@ class GameManager {
         this.asteroidSpawnRate = 800;
         this.lastAsteroidTime = 0;
         this.scrollY = 0;
+        this.lastAudioState = null; // dernier état sonorisé, pour piloter la musique
         this.resetGame();
+    };
+
+    /**
+     * Appel sécurisé au moteur audio : le jeu reste jouable même si le
+     * SoundManager n'a pas pu s'initialiser (Web Audio indisponible).
+     */
+    playSound(method, ...args) {
+        if (typeof soundManager !== 'undefined' && soundManager && typeof soundManager[method] === 'function') {
+            soundManager[method](...args);
+        }
+    };
+
+    /** Nom de la piste musicale correspondant à la vague en cours. */
+    currentMusicTrack() {
+        return (this.wave % 5 === 0) ? 'boss' : 'game';
+    };
+
+    /**
+     * Synchronise la musique et les jingles avec l'état du jeu.
+     * Appelée à chaque frame : les changements de piste sont ignorés
+     * lorsque la piste demandée est déjà en cours de lecture.
+     */
+    updateAudioState() {
+        const stateChanged = (this.gameState !== this.lastAudioState);
+        if (stateChanged) {
+            switch (this.gameState) {
+                case "title":
+                    this.playSound('setMusic', 'title');
+                    break;
+                case "transition":
+                    if (this.lastAudioState === "title" || this.lastAudioState === "gameOver") {
+                        this.playSound('playStart');
+                    }
+                    this.playSound('setMusic', this.currentMusicTrack());
+                    if (this.wave % 5 === 0) {
+                        this.playSound('playBossWarning');
+                    }
+                    break;
+                case "game":
+                    this.playSound('setMusic', this.currentMusicTrack());
+                    break;
+                case "bonus":
+                    this.playSound('setMusic', 'bonus');
+                    break;
+                case "gameOver":
+                    this.playSound('setMusic', null);
+                    this.playSound('playGameOver');
+                    break;
+            }
+            this.lastAudioState = this.gameState;
+        } else if (this.gameState === "game") {
+            // Une vague de boss commence : bascule sur le thème adéquat.
+            this.playSound('setMusic', this.currentMusicTrack());
+        }
     };
 
     resetGame() {
@@ -64,7 +119,12 @@ class GameManager {
         let bonusText = "Press B for Asteroid Bonus";
         textSize(24);
         text(bonusText, (width - textWidth(bonusText)) / 2, 130);
-        
+
+        // Rappel du raccourci audio en bas de l'écran titre
+        let soundText = "Press M for Sound " + (this.isMuted() ? "ON" : "OFF");
+        textSize(20);
+        text(soundText, (width - textWidth(soundText)) / 2, height - 20);
+
         // Vérifiez si titleImage est défini avant de l'utiliser
         if (this.titleImage && this.titleImage.width) {
             image(this.titleImage, (width - this.titleImage.width) / 2, 100);
@@ -79,6 +139,21 @@ class GameManager {
     drawUI() {
         this.drawLives();
         this.drawScore();
+        this.drawSoundStatus();
+    };
+
+    /** Indique que le son est coupé (rien n'est affiché quand il est actif). */
+    isMuted() {
+        return (typeof soundManager !== 'undefined' && soundManager) ? soundManager.muted : true;
+    };
+
+    drawSoundStatus() {
+        if (!this.isMuted()) return;
+        stroke(0);
+        strokeWeight(5);
+        fill(255);
+        textSize(18);
+        text("Sound OFF (M)", 5, 75);
     };
 
     drawElements(elements) {
@@ -159,6 +234,7 @@ class GameManager {
     };
 
     manageGame() {
+        this.updateAudioState();
         const gameStateHandlers = {
             title: this.drawTitle,
             game: this.handleGameLogic,
@@ -260,6 +336,7 @@ class GameManager {
     updateSpaceshipLives() {
         // Decrement spaceship's lives
         this.spaceship.lives--;
+        this.playSound('playPlayerHit');
         // If spaceship has no more lives, end the game
         if (this.spaceship.lives <= 0) {
             this.gameOver = true;
@@ -285,6 +362,16 @@ class GameManager {
             let newBullets = this.spaceship.shoot();
             this.bullets.push(...newBullets);
             this.lastFireTime = currentTime;
+            let shootMode = 'single';
+            if (this.spaceship.tripleShotActive) {
+                shootMode = 'triple';
+            } else if (this.spaceship.doubleShotActive) {
+                shootMode = 'double';
+            }
+            this.playSound('playShoot', shootMode);
+            if (this.spaceship.lateralShootActive) {
+                this.playSound('playLateralShoot');
+            }
         }
     }
 
@@ -293,6 +380,7 @@ class GameManager {
             let enemyBullet = this.enemies[i].shoot();
             if (enemyBullet !== null) {
                 this.enemyBullets.push(enemyBullet);
+                this.playSound(this.enemies[i] instanceof Boss ? 'playBossShoot' : 'playEnemyShoot');
             }
         }
     };
@@ -315,6 +403,7 @@ class GameManager {
     checkAsteroidCollisions() {
         for (let i = this.asteroids.length - 1; i >= 0; i--) {
             if (this.spaceship.collidesWith(this.asteroids[i])) {
+                this.playSound('playAsteroidCrash');
                 this.updateSpaceshipLives();
                 this.asteroids.splice(i, 1);
             }
@@ -325,7 +414,8 @@ class GameManager {
         // Si tous les ennemis sont détruits, passe à l'état de transition et prépare la prochaine vague
         if (this.enemies.length === 0) {
             this.gameState = "transition";
-            this.transitionTime = millis(); 
+            this.transitionTime = millis();
+            this.playSound('playWaveClear');
             this.wave++;
             this.enemiesCreated = false; 
             this.bossCreated = false; // Réinitialisez this.bossCreated à false ici
@@ -380,6 +470,7 @@ class GameManager {
             if (this.spaceship.collidesWith(this.enemyBullets[i])) {
                 if (this.spaceship.reflectBullet(this.enemyBullets[i])) {
                     // La balle a été réfléchie, on la transforme en balle du joueur
+                    this.playSound('playShieldBounce');
                     this.bullets.push(this.enemyBullets[i]);
                     this.enemyBullets.splice(i, 1);
                 } else {
@@ -407,10 +498,15 @@ class GameManager {
                     if (this.enemies[j] instanceof Boss) {
                         this.enemies[j].flashing = true;
                     }
+                    if (this.enemies[j].health > 0) {
+                        // L'ennemi encaisse : simple impact
+                        this.playSound('playHit');
+                    }
                     if (this.enemies[j].health <= 0) {
                         let explosion = new Explosion(this.enemies[j].x, this.enemies[j].y, this.enemies[j].size, this.explosionImages);
                         this.explosions.push(explosion);
-                        
+                        this.playSound(this.enemies[j] instanceof Boss ? 'playBossExplosion' : 'playExplosion');
+
                         // Supprimez la vérification du bouclier ici
                         let powerUp;
                         if (this.enemies[j] instanceof Boss) {
@@ -426,6 +522,7 @@ class GameManager {
                             }
                             powerUp.image = powerUp.getImageForType(powerUp.type);
                             this.powerUps.push(powerUp);
+                            this.playSound('playPowerUpDrop');
                         } else {
                             this.score += 5;
                             // Pour les ennemis normaux, on exclut l'extraLife et on ne droppe le power-up qu'avec une probabilité de 40%
@@ -437,6 +534,7 @@ class GameManager {
                                 powerUp.type = chosenType;
                                 powerUp.image = powerUp.getImageForType(chosenType);
                                 this.powerUps.push(powerUp);
+                                this.playSound('playPowerUpDrop');
                             }
                         }
                         this.enemies.splice(j, 1);
@@ -456,6 +554,8 @@ class GameManager {
         for (let i = this.powerUps.length - 1; i >= 0; i--) {
             // Si le vaisseau entre en collision avec le power-up
             if (this.spaceship.collidesWith(this.powerUps[i])) {
+                // Jouer la signature sonore du bonus avant de l'appliquer
+                this.playSound('playPowerUp', this.powerUps[i].type);
                 // Appliquer l'effet du power-up directement via collectPowerUp()
                 this.spaceship.collectPowerUp(this.powerUps[i]);
                 // Supprimer le power-up après récupération
@@ -501,6 +601,11 @@ class GameManager {
     }
 
     handleKeyPressed() {
+        if (key === 'm' || key === 'M') {
+            // Coupe / rétablit le son sans perturber la partie en cours
+            this.playSound('toggleMute');
+            return;
+        }
         if (key === 'b' || key === 'B') {
             // Le mode bonus peut être lancé à tout moment
             this.startBonusMode();
@@ -513,6 +618,7 @@ class GameManager {
 
     startBonusMode() {
         this.resetGame();
+        this.playSound('playBonusStart');
         this.gameState = "bonus";
         this.bonusStartTime = millis();
         this.asteroids = [];
@@ -524,6 +630,7 @@ class GameManager {
         // Code pour mettre le jeu en pause
         this.gameState = "paused";
         this.isRunning = false;
+        this.playSound('suspend');
         console.log("Jeu en pause");
     }
 
@@ -531,6 +638,7 @@ class GameManager {
         // Code pour reprendre le jeu
         this.gameState = "game";
         this.isRunning = true;
+        this.playSound('resume');
         console.log("Jeu repris");
     }
 

@@ -18,6 +18,7 @@ Un serveur local est requis afin que p5.js puisse charger correctement les image
 
 - 🕹️ Maniez votre vaisseau avec virtuosité grâce à la souris.
 - 🔫 Déchaînez un torrent de projectiles d'un simple clic.
+- 🔊 Laissez-vous porter par la bande-son chiptune (touche **M** pour couper le son).
 - 💥 Détruisez vos ennemis et cumulez des points pour atteindre la gloire.
 - 🛡️ Esquivez habilement tirs ennemis et collisions dans une danse céleste.
 - 🏆 Gravissez les sommets du classement et devenez la légende interstellaire que la galaxie attend !
@@ -71,6 +72,26 @@ l'écran titre) pour affronter un champ d'astéroïdes en défilement continu.
 Évitez les rochers spatiaux et tenez bon jusqu'à la fin du chrono pour
 revenir glorieux au jeu principal !
 
+## 🔊 Une bande-son forgée dans le silicium
+
+Space Carnage sonne comme une borne d'arcade, sans le moindre fichier audio à
+télécharger : **tout est synthétisé en temps réel** par la Web Audio API.
+
+- 🎵 **Musique chiptune dynamique** : un thème pour l'écran titre, un thème
+  nerveux en combat, un thème menaçant lors des vagues de boss et une ritournelle
+  bondissante pour le mode astéroïdes. La bascule est automatique.
+- 💥 **Bruitages réactifs** : tirs (simple, double, triple, latéral), tirs
+  ennemis et de boss, impacts, explosions, ricochets sur le bouclier, crashs
+  d'astéroïdes… chaque power-up possède même sa propre signature sonore, du
+  carillon de la vie supplémentaire au glissando maléfique du crâne.
+- 🎚️ **Mixage maîtrisé** : un compresseur en sortie empêche la saturation quand
+  l'écran s'embrase.
+- 🔇 **Touche M** : coupe ou rétablit le son à tout moment ; votre choix est
+  mémorisé pour vos prochaines sessions.
+
+> Le son démarre à votre première interaction (clic, toucher ou touche), comme
+> l'exigent les navigateurs modernes.
+
 ## 🌌 L'intelligence derrière ce chaos spatial
 
 L'univers de Space Carnage est méticuleusement orchestré :
@@ -81,6 +102,7 @@ L'univers de Space Carnage est méticuleusement orchestré :
 - **bullet.js** : L'essence même du combat interstellaire.
 - **gameManager.js** : L'arbitre impartial de vos exploits galactiques.
 - **powerUp.js** : La touche magique qui sublime chaque bataille.
+- **soundManager.js** : Le compositeur synthétique de l'épopée sonore.
 
 # 🚀 Prêt à repousser les limites de l'univers ?
 

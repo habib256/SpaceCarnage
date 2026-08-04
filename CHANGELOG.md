@@ -2,6 +2,16 @@
 
 Toutes les modifications notables à ce projet seront documentées dans ce fichier.
 
+## [0.6.0] - 2026-08-04 - Sound Edition
+
+- Ajout de **soundManager.js**, un moteur audio 100% procédural basé sur la Web Audio API : aucun fichier son n'est nécessaire, tout est synthétisé en temps réel.
+- **Musique chiptune dynamique** avec quatre thèmes bouclés (titre, combat, boss, mode bonus) qui suivent automatiquement l'état du jeu.
+- **Bruitages complets** : tirs du joueur (simple, double, triple, latéral), tirs ennemis et de boss, impacts, explosions, destruction de boss, perte de vie, ricochet sur le bouclier, apparition et ramassage des power-ups (une signature sonore par type), collision d'astéroïde, fin de vague, arrivée d'un boss, game over et démarrage de partie.
+- Le contexte audio est débloqué au premier geste de l'utilisateur, conformément aux politiques d'autoplay des navigateurs.
+- La touche **M** coupe ou rétablit le son ; le choix est mémorisé dans le localStorage et rappelé sur l'écran titre.
+- Le son est automatiquement suspendu lors de la mise en pause du jeu (onglet caché) et repris ensuite.
+- Un compresseur en sortie évite la saturation lorsque plusieurs effets se superposent.
+
 ## [0.5.0] - 2025-06-07 - Asteroid Bonus Edition
 
  - Ajout d'un **mode bonus** accessible à tout moment en appuyant sur la touche **B**.
