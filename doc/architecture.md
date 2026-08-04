@@ -22,6 +22,7 @@ SpaceCarnage/
 ├── index.html
 ├── powerup.js
 ├── sketch.js
+├── soundManager.js
 ├── spaceship.js
 └── style.css
 ```
@@ -74,6 +75,29 @@ SpaceCarnage/
 - Obstacle du mode bonus
 - Se déplace verticalement pour créer un effet de champ d'astéroïdes
 
+#### SoundManager (soundManager.js)
+- Moteur audio 100% procédural (Web Audio API), sans aucun fichier son
+- Graphe de mixage : voix → [filtre] → enveloppe → panoramique → bus
+  (`sfxBus` / `musicBus`) → `master` → compresseur → sortie, avec un départ
+  vers un bus de réverbération à convolution (réponse impulsionnelle générée)
+- Briques de synthèse réutilisables :
+  - `tone()` : oscillateur avec balayage, vibrato, filtre et saturation
+  - `fm()` : synthèse par modulation de fréquence (timbres métalliques)
+  - `noise()` : bruit blanc filtré, avec balayage de filtre
+  - `debris()` : micro-salves dispersées, pour les queues d'explosion
+  - `jingle()` : suite de notes MIDI avec doublure à l'octave optionnelle
+  - `shapeVoice()` : mise en forme partagée du timbre — saturation (`grit`),
+    quantification 8 bits (`crush`) et modulation en anneau (`ring`)
+  - `duck()` : atténuation temporaire de la musique sous un événement marquant
+- Bruitages construits en couches (transitoire, corps, queue) et légèrement
+  randomisés en hauteur pour éviter la répétition mécanique
+- Panoramique dérivé de la position à l'écran via `panFor()` / `GameManager.panOf()`
+- Budget de voix (`maxVoices`) et anti-mitraillage (`throttle()`) pour préserver
+  le frame rate
+- Séquenceur musical à planification anticipée (`lookAhead`) pour des boucles
+  chiptune régulières, indépendantes du frame rate de p5.js
+- Gestion du déblocage audio, de la coupure du son et de la mise en veille
+
 ### 2.2 Point d'Entrée (sketch.js)
 - Initialisation du jeu
 - Chargement des ressources
@@ -102,7 +126,21 @@ Types disponibles :
 - Multiplicateur de points
 - High score persistant (localStorage)
 
-### 3.4 Système de Vagues
+### 3.4 Système Audio
+- Musique chiptune bouclée, avec une piste par contexte (`title`, `game`,
+  `boss`, `bonus`), pilotée par `GameManager.updateAudioState()`
+- Bruitages déclenchés depuis les points de gameplay via `GameManager.playSound()`,
+  un appel sécurisé qui laisse le jeu fonctionner si l'audio est indisponible
+- Spatialisation stéréo : chaque bruitage reçoit la position de l'entité
+  concernée, calculée par `GameManager.panOf()`
+- Le contexte audio est créé puis réveillé au premier geste utilisateur
+  (`SoundManager.unlock()` appelé depuis `sketch.js`)
+- Repères sonores d'état : chute du bouclier et expiration des bonus depuis
+  `Spaceship`, alarme de dernière vie, fanfare de record battu au game over
+- Coupure du son avec la touche M, persistée dans le localStorage
+- Suspension/reprise du contexte lorsque le jeu est mis en pause
+
+### 3.5 Système de Vagues
 - Progression de difficulté
 - Apparition de boss tous les 5 niveaux
 - Changement de fond tous les 5 niveaux
@@ -111,7 +149,7 @@ Types disponibles :
 ## 4. Contrôles
 - Support tactile (mobile)
 - Support souris (desktop)
-- Contrôles clavier pour actions spéciales
+- Contrôles clavier pour actions spéciales (B : mode bonus, M : son on/off)
 - Gestion du plein écran
 
 ## 5. Optimisations
@@ -133,6 +171,7 @@ Le code est modulaire et permet d'ajouter facilement :
 - `sketch.js` : Point d'entrée et configuration
 - `gameManager.js` : Logique principale du jeu
 - `spaceship.js` : Contrôle du vaisseau du joueur
+- `soundManager.js` : Synthèse de la musique et des bruitages
 
 ### 7.2 Fichiers d'Entités
 - `enemy.js` : Base des ennemis

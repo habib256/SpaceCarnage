@@ -5,6 +5,7 @@ let bgImages = [];
 let explosionImages = [];
 let powerupImages = [];
 let gameManager;
+let soundManager;
 let titleImage; // Added this line
 
 function preload() {
@@ -18,6 +19,7 @@ function preload() {
 
 function setup() {
     createCanvas(min(windowWidth-25, 1024), min(windowHeight-25, 1024));
+    soundManager = new SoundManager();
     gameManager = new GameManager(spaceshipImages, enemyImages, bgImages, explosionImages, powerupImages, titleImage); // Added titleImage as an argument
     noCursor();
     frameRate(30); // Définit la vitesse d'affichage à 30 fps
@@ -34,6 +36,10 @@ function draw() {
 }
 
 function touchStarted() {
+    // Le contexte audio ne peut être démarré que depuis un geste utilisateur
+    if (soundManager) {
+        soundManager.unlock();
+    }
     if (gameManager) {
         gameManager.handleTouchPressed();
     }
@@ -46,12 +52,18 @@ function touchEnded() {
 }
 
 function mousePressed() {
+    if (soundManager) {
+        soundManager.unlock();
+    }
     if (gameManager) {
         gameManager.handleMousePressed();
     }
 }
 
 function keyPressed() {
+    if (soundManager) {
+        soundManager.unlock();
+    }
     if (gameManager) {
         gameManager.handleKeyPressed();
     }

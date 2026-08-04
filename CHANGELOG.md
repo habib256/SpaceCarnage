@@ -2,6 +2,47 @@
 
 Toutes les modifications notables à ce projet seront documentées dans ce fichier.
 
+## [0.6.2] - 2026-08-04 - Sound Design Edition
+
+- **Ducking musical** : la musique s'efface brièvement sous les explosions, la perte de vie et le game over, comme un compresseur à chaîne latérale. Les impacts gagnent en poids sans monter le volume.
+- **Six nouveaux repères sonores** pour des événements jusque-là muets :
+  - chute du bouclier (la montée du ramassage jouée à l'envers),
+  - expiration d'un bonus de tir,
+  - alarme de dernière vie, calée juste après l'explosion pour rester lisible,
+  - **fanfare de record battu**, qui remplace le thème de défaite quand le meilleur score tombe,
+  - cadence de fin du mode bonus,
+  - souffle des astéroïdes qui entrent dans le champ, dont la hauteur suit la taille du rocher.
+- **Quantification 8 bits** (`crush`) : le craquement des convertisseurs d'époque, sur les impacts, le grondement des boss et l'alarme de dernière vie.
+- **Modulation en anneau** (`ring`) : partiels inharmoniques pour le crâne, qui sonne enfin aussi faux qu'il est maléfique.
+- **Largeur stéréo** : les explosions sont désormais composées de deux souffles décorrélés panoramiqués à gauche et à droite.
+- **Rotation de timbres sur le tir du joueur** : trois rapports de modulation alternent, la mitraille ne se répète plus mécaniquement.
+- Panoramique corrigé pour les astéroïdes, dessinés centrés et non depuis leur coin.
+- Factorisation de la mise en forme du timbre dans `shapeVoice()`, partagée par `tone()`, `fm()` et `noise()`.
+- Nouveau rééquilibrage après mesure : compensation des 3 dB perdus par la décorrélation stéréo des explosions.
+
+## [0.6.1] - 2026-08-04 - Better Sound Effects Edition
+
+- **Bruitages entièrement retravaillés**, désormais construits en plusieurs couches (transitoire, corps, queue) au lieu de simples balayages de fréquence.
+- Ajout de la **synthèse FM** (`SoundManager.fm()`) : les tirs, impacts et ricochets de bouclier gagnent un timbre métallique impossible à obtenir en synthèse soustractive.
+- Ajout d'une **réverbération spatiale** générée à la volée (convolueur alimenté par une réponse impulsionnelle de bruit décroissant) : explosions et bonus gagnent en profondeur.
+- Ajout du **panoramique stéréo** : un ennemi qui explose à gauche de l'écran s'entend à gauche. Chaque bruitage suit la position de l'entité concernée.
+- Ajout de la **saturation** (`WaveShaper`) pour donner du grain aux tirs ennemis, aux explosions et à l'alarme des boss, et du **vibrato** (LFO) pour les sons tenus.
+- Les explosions projettent maintenant une **pluie de débris** (micro-salves de bruit dispersées et pannées aléatoirement) et les explosions de boss détonnent en trois temps.
+- Légère **variation aléatoire de hauteur** sur les sons répétitifs pour supprimer l'effet mitraillette.
+- Enveloppes enrichies d'un palier de maintien (`hold`) pour des sons plus francs.
+- **Rééquilibrage complet du mixage** : les sons fréquents (tirs, impacts) ont été remontés et les sons rares (game over, alerte de boss) adoucis, après mesure du pic et du niveau efficace de chaque effet.
+- Ajout d'un **budget de voix** (80 maximum) qui protège le frame rate lorsque l'écran s'embrase.
+
+## [0.6.0] - 2026-08-04 - Sound Edition
+
+- Ajout de **soundManager.js**, un moteur audio 100% procédural basé sur la Web Audio API : aucun fichier son n'est nécessaire, tout est synthétisé en temps réel.
+- **Musique chiptune dynamique** avec quatre thèmes bouclés (titre, combat, boss, mode bonus) qui suivent automatiquement l'état du jeu.
+- **Bruitages complets** : tirs du joueur (simple, double, triple, latéral), tirs ennemis et de boss, impacts, explosions, destruction de boss, perte de vie, ricochet sur le bouclier, apparition et ramassage des power-ups (une signature sonore par type), collision d'astéroïde, fin de vague, arrivée d'un boss, game over et démarrage de partie.
+- Le contexte audio est débloqué au premier geste de l'utilisateur, conformément aux politiques d'autoplay des navigateurs.
+- La touche **M** coupe ou rétablit le son ; le choix est mémorisé dans le localStorage et rappelé sur l'écran titre.
+- Le son est automatiquement suspendu lors de la mise en pause du jeu (onglet caché) et repris ensuite.
+- Un compresseur en sortie évite la saturation lorsque plusieurs effets se superposent.
+
 ## [0.5.0] - 2025-06-07 - Asteroid Bonus Edition
 
  - Ajout d'un **mode bonus** accessible à tout moment en appuyant sur la touche **B**.
