@@ -89,14 +89,35 @@ SpaceCarnage/
   - `shapeVoice()` : mise en forme partagée du timbre — saturation (`grit`),
     quantification 8 bits (`crush`) et modulation en anneau (`ring`)
   - `duck()` : atténuation temporaire de la musique sous un événement marquant
+  - `createPulseWave()` : ondes à rapport cyclique variable (12,5 % / 25 % / 33 %)
+    construites par série de Fourier, absentes de la Web Audio API
 - Bruitages construits en couches (transitoire, corps, queue) et légèrement
   randomisés en hauteur pour éviter la répétition mécanique
 - Panoramique dérivé de la position à l'écran via `panFor()` / `GameManager.panOf()`
 - Budget de voix (`maxVoices`) et anti-mitraillage (`throttle()`) pour préserver
-  le frame rate
-- Séquenceur musical à planification anticipée (`lookAhead`) pour des boucles
-  chiptune régulières, indépendantes du frame rate de p5.js
+  le frame rate ; la musique dispose d'une réserve supplémentaire afin de ne
+  jamais perdre une basse au profit d'un débris d'explosion
+- Séquenceur musical à planification anticipée (`lookAhead`), indépendant du
+  frame rate de p5.js
 - Gestion du déblocage audio, de la coupure du son et de la mise en veille
+
+#### Séquenceur musical (dans soundManager.js)
+- Partitions écrites en notation « tracker » : une chaîne par mesure, seize
+  jetons pour seize doubles croches — `69` (note MIDI), `57+60+64` (accord),
+  `-` (liaison, prolonge la note), `.` (silence)
+- Chaîne de compilation : `notes()` / `hits()` analysent les chaînes, `fit()`
+  vérifie la longueur des mesures, `events()` transforme les liaisons en durées
+  et `compile()` déroule les sections en une boucle unique
+- Structure par sections (intro, couplet, pont, refrain) avec `repeat` et
+  `loopFrom` : ce qui précède le point de rebouclage ne s'entend qu'une fois
+- Cinq voies : `bass`, `lead`, `arp`, `pad` et une batterie (`kick`, `snare`,
+  `hat`, `open`, `tom`) dont les symboles portent une vélocité
+- Instruments dédiés (`musicBass()`, `musicLead()`, `musicArp()`, `musicPad()`,
+  `musicKick()`, `musicSnare()`, `musicHat()`, `musicTom()`)
+- Bus d'écho musical (`buildMusicEcho()`) recalé sur le tempo à chaque
+  changement de piste par `syncEcho()`, et swing optionnel via `stepLength()`
+- `setMusic()` avec fondu d'entrée, et `setMusicLater()` pour les thèmes de fin
+  de partie qui ne doivent pas démarrer sous la fanfare qui les annonce
 
 ### 2.2 Point d'Entrée (sketch.js)
 - Initialisation du jeu
@@ -127,8 +148,10 @@ Types disponibles :
 - High score persistant (localStorage)
 
 ### 3.4 Système Audio
-- Musique chiptune bouclée, avec une piste par contexte (`title`, `game`,
-  `boss`, `bonus`), pilotée par `GameManager.updateAudioState()`
+- Sept thèmes chiptune pilotés par `GameManager.updateAudioState()` :
+  `title`, `game` et `gameAlt` (thèmes de combat alternés par
+  `currentMusicTrack()` d'un groupe de vagues à l'autre), `boss`, `bonus`,
+  `gameOver` et `victory` (record battu)
 - Bruitages déclenchés depuis les points de gameplay via `GameManager.playSound()`,
   un appel sécurisé qui laisse le jeu fonctionner si l'audio est indisponible
 - Spatialisation stéréo : chaque bruitage reçoit la position de l'entité

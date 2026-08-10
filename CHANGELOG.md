@@ -2,6 +2,52 @@
 
 Toutes les modifications notables à ce projet seront documentées dans ce fichier.
 
+## [0.7.0] - 2026-08-10 - Music Edition
+
+Le séquenceur musical est entièrement reconstruit. La première version bouclait
+seize pas — une basse, une mélodie, une grosse caisse et un charleston — soit
+quatre secondes qui revenaient à l'identique pendant toute la partie. Les
+morceaux ont désormais une forme, des instruments et une place dans le mix.
+
+- **Sept thèmes composés** au lieu de quatre boucles :
+  - `title` : planant, la nappe et l'arpège s'installent en introduction avant
+    l'entrée du thème, qui seul reboucle ;
+  - `game` et **`gameAlt`, un second thème de combat** (ré mineur, plus rapide)
+    qui prend le relais d'un groupe de vagues à l'autre, pour qu'une longue
+    partie ne tourne pas sur la même boucle du début à la fin ;
+  - `boss` : mode phrygien, montée chromatique et refrain en demi-tempo ;
+  - `bonus` : fa majeur bondissant, avec swing ;
+  - **`gameOver`** : marche funèbre jouée sous l'écran de score ;
+  - **`victory`** : fanfare en do majeur quand le record tombe.
+- **Notation « tracker »** pour écrire les partitions : une chaîne par mesure,
+  seize jetons pour seize doubles croches, avec accords (`57+60+64`), silences
+  (`.`) et surtout **liaisons** (`-`) — sans elles, tout était haché en doubles
+  croches, ce qui était le défaut majeur de l'ancien séquenceur.
+- **Structure par sections** (intro, couplet, pont, refrain) enchaînées par
+  `compile()`, avec répétitions et point de rebouclage (`loopFrom`).
+- **Cinq voies** au lieu de trois : basse, mélodie, arpège, nappe d'accords et
+  batterie (grosse caisse, caisse claire, charlestons fermé et ouvert, tom),
+  avec une **vélocité par frappe** (`X` accent, `x` normal, `o` étouffé).
+- **Instruments dédiés** : basse à filtre résonant doublée d'un triangle,
+  mélodie en deux impulsions désaccordées et écartées en stéréo, vibrato
+  réservé aux notes tenues, nappes filtrées et arpèges renvoyés dans l'écho.
+- **Ondes à rapport cyclique variable** (12,5 %, 25 %, 33 %) fabriquées par
+  série de Fourier : la Web Audio API n'offre qu'un carré 50 %, alors que le
+  timbre des puces d'époque tient justement aux impulsions étroites.
+- **Écho musical synchronisé au tempo** (croche pointée), recalé à chaque
+  changement de piste : la ligne de retard qui fait sonner une seule voix
+  comme deux.
+- **Swing** optionnel par piste : les pas pairs s'allongent, les impairs se
+  raccourcissent, le tempo moyen ne bouge pas mais la rythmique cesse d'être
+  mécanique.
+- **Fondu d'entrée** sur les changements de piste, et **démarrage différé** des
+  thèmes de fin de partie (`setMusicLater()`) pour qu'ils ne surgissent pas
+  sous la fanfare qui les annonce.
+- **Réserve de voix pour la musique** : sous une charge extrême, ce sont les
+  bruitages qui sont écrêtés, jamais la basse au milieu d'une mesure.
+- Les partitions sont **vérifiées à la compilation** : une mesure mal comptée
+  est signalée dans la console au lieu de décaler silencieusement la boucle.
+
 ## [0.6.2] - 2026-08-04 - Sound Design Edition
 
 - **Ducking musical** : la musique s'efface brièvement sous les explosions, la perte de vie et le game over, comme un compresseur à chaîne latérale. Les impacts gagnent en poids sans monter le volume.
