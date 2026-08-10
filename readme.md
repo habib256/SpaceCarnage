@@ -77,9 +77,17 @@ revenir glorieux au jeu principal !
 Space Carnage sonne comme une borne d'arcade, sans le moindre fichier audio à
 télécharger : **tout est synthétisé en temps réel** par la Web Audio API.
 
-- 🎵 **Musique chiptune dynamique** : un thème pour l'écran titre, un thème
-  nerveux en combat, un thème menaçant lors des vagues de boss et une ritournelle
-  bondissante pour le mode astéroïdes. La bascule est automatique.
+- 🎵 **Sept thèmes chiptune composés, pas bouclés** : chaque morceau enchaîne
+  intro, couplet, pont et refrain au lieu de répéter les mêmes quatre secondes.
+  Écran titre planant, **deux thèmes de combat** qui se relaient au fil des
+  vagues pour qu'une longue partie ne tourne jamais en rond, boss en mode
+  phrygien avec refrain en demi-tempo, ritournelle bondissante du mode
+  astéroïdes, marche funèbre du game over et **fanfare de victoire** quand le
+  record tombe. La bascule est automatique.
+- 🎹 **Un vrai petit orchestre 8 bits** : basse à filtre résonant, mélodie en
+  impulsions désaccordées et vibrato, arpèges, nappes d'accords et batterie
+  synthétisée — le tout avec un **écho calé sur le tempo**, exactement comme sur
+  les puces sonores d'époque.
 - 💥 **Bruitages multi-couches** : chaque son est bâti comme en studio —
   transitoire claquant, corps métallique en synthèse FM, queue harmonique et
   pluie de débris. Tirs (simple, double, triple, latéral), tirs ennemis et de

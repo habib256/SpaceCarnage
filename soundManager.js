@@ -40,6 +40,7 @@ class SoundManager {
         // Séquenceur musical
         this.currentTrack = null;
         this.musicTimer = null;
+        this.pendingMusic = null;   // changement de piste différé
         this.nextStepTime = 0;
         this.step = 0;
         this.lookAhead = 0.15;      // secondes planifiées à l'avance
@@ -100,9 +101,62 @@ class SoundManager {
         this.gritCurve = SoundManager.createDistortionCurve(12);
         this.crushCurve = SoundManager.createCrushCurve(9);
         this.buildReverb();
+        this.buildMusicEcho();
+        this.buildPulseWaves();
 
         this.ready = true;
         return true;
+    }
+
+    /**
+     * Écho musical synchronisé au tempo : la ligne de retard emblématique des
+     * musiques de consoles 8 bits, où une seule voix de mélodie semble en
+     * devenir deux. Il ne reçoit que la musique et repart dans le bus musical,
+     * de sorte qu'il s'efface lui aussi sous le ducking des explosions.
+     */
+    buildMusicEcho() {
+        const ctx = this.ctx;
+        this.musicDelay = ctx.createDelay(1.5);
+        this.musicDelay.delayTime.value = 0.24;
+
+        const feedback = ctx.createGain();
+        feedback.gain.value = 0.34;
+
+        // Chaque répétition est plus sourde que la précédente : les échos
+        // s'éloignent au lieu de s'empiler dans les aigus.
+        const damp = ctx.createBiquadFilter();
+        damp.type = 'lowpass';
+        damp.frequency.value = 2400;
+
+        this.musicEchoBus = ctx.createGain();
+        this.musicEchoBus.gain.value = 0.5;
+        this.musicEchoBus.connect(this.musicDelay);
+        this.musicDelay.connect(damp);
+        damp.connect(feedback);
+        feedback.connect(this.musicDelay);
+        damp.connect(this.musicBus);
+    }
+
+    /**
+     * Ondes carrées à rapport cyclique variable. La Web Audio API n'offre
+     * qu'un carré 50 %, alors que le son des puces d'époque tient largement
+     * aux impulsions étroites (12,5 % : nasillard et perçant ; 25 % : le
+     * timbre de lead classique). On les fabrique par leur série de Fourier.
+     */
+    buildPulseWaves() {
+        this.pulse12 = this.createPulseWave(0.125);
+        this.pulse25 = this.createPulseWave(0.25);
+        this.pulse33 = this.createPulseWave(0.33);
+    }
+
+    createPulseWave(duty, harmonics = 40) {
+        const real = new Float32Array(harmonics + 1);
+        const imag = new Float32Array(harmonics + 1);
+        for (let n = 1; n <= harmonics; n++) {
+            // Coefficient de Fourier d'une impulsion de rapport cyclique `duty`
+            imag[n] = (2 / (n * Math.PI)) * Math.sin(n * Math.PI * duty);
+        }
+        return this.ctx.createPeriodicWave(real, imag, { disableNormalization: false });
     }
 
     /**
@@ -308,9 +362,16 @@ class SoundManager {
         return Math.max(-1, Math.min(1, p)) * 0.7;
     }
 
-    /** Une voix peut-elle encore être allouée ? */
-    canPlay() {
-        return this.ready && !this.muted && this.voices < this.maxVoices;
+    /**
+     * Une voix peut-elle encore être allouée ?
+     * La musique dispose d'une réserve supplémentaire : une basse qui
+     * disparaît au milieu d'une mesure s'entend bien plus qu'un débris
+     * d'explosion en moins.
+     * @param {boolean} isMusic - la voix appartient-elle au bus musical ?
+     */
+    canPlay(isMusic) {
+        if (!this.ready || this.muted) return false;
+        return this.voices < (isMusic ? this.maxVoices + 32 : this.maxVoices);
     }
 
     /** Comptabilise une voix et libère le compteur à la fin du son. */
@@ -353,23 +414,36 @@ class SoundManager {
             tail.connect(send);
             send.connect(this.reverbBus);
         }
+        if (o.echo && this.musicEchoBus) {
+            const send = ctx.createGain();
+            send.gain.value = o.echo;
+            tail.connect(send);
+            send.connect(this.musicEchoBus);
+        }
         return env;
     }
 
     /**
      * Joue une note synthétisée.
-     * @param {Object} o - freq, endFreq, type, duration, attack, hold, gain,
-     *                     delay, detune, vibrato, vibratoDepth, grit, filter,
-     *                     filterFreq, endFilterFreq, q, pan, send, bus
+     * @param {Object} o - freq, endFreq, type, wave, duration, attack, hold,
+     *                     gain, delay, detune, vibrato, vibratoDepth, grit,
+     *                     filter, filterFreq, endFilterFreq, q, pan, send,
+     *                     echo, bus
      */
     tone(o) {
-        if (!this.canPlay()) return;
+        if (!this.canPlay(o.bus === 'music')) return;
         const ctx = this.ctx;
         const start = ctx.currentTime + (o.delay || 0);
         const duration = o.duration || 0.15;
 
         const osc = ctx.createOscillator();
-        osc.type = o.type || 'square';
+        // Une onde personnalisée (impulsion 12,5 % / 25 %) l'emporte sur le
+        // type standard : c'est elle qui donne le timbre « puce sonore ».
+        if (o.wave) {
+            osc.setPeriodicWave(o.wave);
+        } else {
+            osc.type = o.type || 'square';
+        }
         const freq = Math.max(20, o.freq);
         osc.frequency.setValueAtTime(freq, start);
         if (o.endFreq && o.endFreq !== o.freq) {
@@ -429,7 +503,7 @@ class SoundManager {
      *                     gain, type, delay, pan, send, grit
      */
     fm(o) {
-        if (!this.canPlay()) return;
+        if (!this.canPlay(o.bus === 'music')) return;
         const ctx = this.ctx;
         const start = ctx.currentTime + (o.delay || 0);
         const duration = o.duration || 0.15;
@@ -475,7 +549,7 @@ class SoundManager {
      *                     delay, q, attack, hold, pan, send, grit, bus
      */
     noise(o) {
-        if (!this.canPlay()) return;
+        if (!this.canPlay(o.bus === 'music')) return;
         const ctx = this.ctx;
         const start = ctx.currentTime + (o.delay || 0);
         const duration = o.duration || 0.2;
@@ -1069,58 +1143,578 @@ class SoundManager {
         ], { type: 'triangle', gain: 0.2, send: 0.3, shimmer: 0.35 });
     }
 
+
     /* ------------------------------------------------------------------ */
     /*  Musique chiptune séquencée                                         */
     /* ------------------------------------------------------------------ */
 
     /**
-     * Définition des pistes. Chaque piste est une boucle de 16 pas contenant
-     * une ligne de basse, une ligne mélodique et une trame rythmique.
-     * Les valeurs sont des numéros de note MIDI (null = silence).
+     * Les partitions sont écrites en notation « tracker » : une chaîne par
+     * mesure, seize jetons pour seize doubles croches.
+     *
+     *   "69"        note MIDI attaquée sur ce pas
+     *   "57+60+64"  accord (une voix par note)
+     *   "-"         liaison : prolonge la note précédente d'un pas
+     *   "."         silence
+     *
+     * C'est la forme la plus lisible pour relire une mélodie d'un coup d'œil,
+     * et surtout la seule qui permette d'écrire des notes tenues : sans les
+     * liaisons, tout serait haché en doubles croches, ce qui était le défaut
+     * majeur de la première version du séquenceur.
+     */
+    static notes(pattern) {
+        const tokens = (Array.isArray(pattern) ? pattern.join(' ') : pattern)
+            .trim().split(/\s+/);
+        return tokens.map(t => {
+            if (t === '.') return null;
+            if (t === '-') return SoundManager.TIE;
+            if (t.indexOf('+') !== -1) return t.split('+').map(Number);
+            return Number(t);
+        });
+    }
+
+    /**
+     * Grille rythmique : "X" accent, "x" frappe normale, "o" frappe étouffée,
+     * "." silence. La valeur renvoyée est une vélocité, pas un booléen : c'est
+     * elle qui donne le relief d'un vrai batteur plutôt qu'une machine.
+     */
+    static hits(pattern) {
+        const tokens = (Array.isArray(pattern) ? pattern.join(' ') : pattern)
+            .trim().split(/\s+/);
+        return tokens.map(t => {
+            if (t === 'X') return 1.3;
+            if (t === 'x') return 1;
+            if (t === 'o') return 0.55;
+            return 0;
+        });
+    }
+
+    /** Ajuste une ligne à la longueur d'une section et signale les erreurs de saisie. */
+    static fit(line, length, filler, label) {
+        if (line.length && line.length !== length) {
+            console.warn(`Piste musicale : ${label} contient ${line.length} pas au lieu de ${length}.`);
+        }
+        const out = new Array(length);
+        for (let i = 0; i < length; i++) {
+            out[i] = i < line.length ? line[i] : filler;
+        }
+        return out;
+    }
+
+    /**
+     * Convertit une ligne de notes en table d'événements indexée par pas :
+     * chaque attaque connaît sa durée en pas, liaisons comprises. Le
+     * séquenceur n'a plus qu'à lire `voie[pas]`.
+     */
+    static events(line) {
+        const at = new Array(line.length).fill(null);
+        for (let i = 0; i < line.length; i++) {
+            const value = line[i];
+            if (value === null || value === SoundManager.TIE) continue;
+            let len = 1;
+            while (i + len < line.length && line[i + len] === SoundManager.TIE) len++;
+            at[i] = { note: value, len: len };
+        }
+        return at;
+    }
+
+    /**
+     * Compile une partition en une boucle unique.
+     *
+     * Une piste est une suite de sections (chacune de deux mesures) que l'on
+     * enchaîne : intro, couplet, pont, refrain. C'est ce qui distingue une
+     * musique d'une boucle — l'oreille attend la suite au lieu de reconnaître
+     * les mêmes seize pas toutes les quatre secondes. `loopFrom` désigne la
+     * section sur laquelle la piste reboucle : ce qui précède ne s'entend
+     * qu'une fois, comme une introduction.
+     */
+    static compile(def) {
+        const length = def.steps || 32;
+        const melodic = ['bass', 'lead', 'arp', 'pad'];
+        const rhythmic = ['kick', 'snare', 'hat', 'open', 'tom'];
+        const track = {
+            bpm: def.bpm,
+            swing: def.swing || 0,
+            leadWave: def.leadWave || null,
+            loopStart: 0,
+            length: 0
+        };
+        melodic.concat(rhythmic).forEach(name => { track[name] = []; });
+
+        const loopFrom = def.loopFrom || 0;
+        def.sections.forEach((section, index) => {
+            const repeat = section.repeat || 1;
+            for (let r = 0; r < repeat; r++) {
+                if (index === loopFrom && r === 0) track.loopStart = track.bass.length;
+                melodic.forEach(name => {
+                    const line = section[name] ? SoundManager.notes(section[name]) : [];
+                    track[name] = track[name].concat(
+                        SoundManager.fit(line, length, null, `${def.name}/${index}/${name}`));
+                });
+                rhythmic.forEach(name => {
+                    const line = section[name] ? SoundManager.hits(section[name]) : [];
+                    track[name] = track[name].concat(
+                        SoundManager.fit(line, length, 0, `${def.name}/${index}/${name}`));
+                });
+            }
+        });
+
+        track.length = track.bass.length;
+        melodic.forEach(name => { track[name] = SoundManager.events(track[name]); });
+        return track;
+    }
+
+    /**
+     * Partitions du jeu. Sept thèmes qui suivent l'action : l'écran titre, deux
+     * thèmes de combat qui alternent au fil des vagues, le boss, le mode bonus,
+     * la défaite et le record battu.
      */
     static buildTracks() {
+        // Trames rythmiques réutilisées d'une piste à l'autre.
+        const kickRock   = 'X . . . . . x . x . . . . . . .';
+        const snareBack  = '. . . . X . . . . . . . X . . .';
+        const hat8       = 'X . o . x . o . X . o . x . o .';
+        const hat16      = 'X o x o X o x o X o x o X o x o';
+        const silence16  = '. . . . . . . . . . . . . . . .';
+
         return {
-            title: {
-                bpm: 88,
-                bass: [45, null, null, null, 43, null, null, null,
-                       41, null, null, null, 40, null, null, null],
-                lead: [69, null, 72, null, 76, null, 72, null,
-                       71, null, 74, null, 76, null, null, null],
-                leadType: 'triangle',
-                kick: [], hat: []
-            },
-            game: {
-                bpm: 132,
-                bass: [33, 33, 45, 33, 36, 36, 48, 36,
-                       31, 31, 43, 31, 38, 38, 50, 45],
-                lead: [69, 72, 76, 72, 74, 77, 81, 77,
-                       67, 71, 74, 71, 69, 74, 81, 76],
-                leadType: 'square',
-                kick: [0, 4, 8, 12],
-                hat: [2, 6, 10, 14]
-            },
-            boss: {
-                bpm: 148,
-                bass: [29, 29, 30, 29, 29, 35, 34, 29,
-                       29, 29, 30, 29, 36, 35, 34, 33],
-                lead: [65, null, 66, null, 65, null, 71, 70,
-                       65, null, 66, null, 72, 71, 70, 69],
-                leadType: 'sawtooth',
-                kick: [0, 3, 6, 8, 11, 14],
-                hat: [2, 4, 10, 12]
-            },
-            bonus: {
-                bpm: 120,
-                bass: [36, 36, 43, 36, 41, 41, 48, 41,
-                       38, 38, 45, 38, 43, 43, 50, 43],
-                lead: [72, 76, 79, 76, 77, 81, 84, 81,
-                       74, 77, 81, 77, 79, 83, 86, 83],
-                leadType: 'triangle',
-                kick: [0, 4, 8, 12],
-                hat: [2, 6, 10, 14]
-            }
+            /* ---------------------------------------------------------- */
+            /*  Écran titre : lent, spatial, une nappe et un arpège avant   */
+            /*  l'entrée du thème. Il doit tourner longtemps sans lasser.   */
+            /* ---------------------------------------------------------- */
+            title: SoundManager.compile({
+                name: 'title', bpm: 86, swing: 0, leadWave: 'pulse25', loopFrom: 2,
+                sections: [
+                    {   // Intro : la nappe s'installe, l'arpège scintille (La m, Fa)
+                        pad: ['57+60+64 - - - - - - - - - - - - - - -',
+                              '53+57+60 - - - - - - - - - - - - - - -'],
+                        arp: ['69 . 72 . 76 . 81 . 76 . 72 . 69 . 72 .',
+                              '65 . 69 . 72 . 77 . 72 . 69 . 65 . 69 .']
+                    },
+                    {   // Suite de l'intro (Do, Sol), le charleston annonce le tempo
+                        pad: ['60+64+67 - - - - - - - - - - - - - - -',
+                              '55+59+62 - - - - - - - - - - - - - - -'],
+                        arp: ['72 . 76 . 79 . 84 . 79 . 76 . 72 . 76 .',
+                              '67 . 71 . 74 . 79 . 74 . 71 . 67 . 71 .'],
+                        hat: ['. . o . . . o . . . o . . . o .',
+                              '. . o . . . o . . . o . . . o .']
+                    },
+                    {   // Thème principal (La m, Fa) : c'est ici que la boucle revient
+                        bass: ['45 . 45 . 45 . 45 . 45 . 45 . 45 . 47 .',
+                               '41 . 41 . 41 . 41 . 41 . 41 . 41 . 43 .'],
+                        lead: ['. . 76 - 74 - 72 - - - . . 69 - - -',
+                               '. . 72 - 74 - 76 - - - . . 77 - - -'],
+                        pad:  ['57+60+64 - - - - - - - - - - - - - - -',
+                               '53+57+60 - - - - - - - - - - - - - - -'],
+                        kick: ['x . . . . . . . x . . . . . . .',
+                               'x . . . . . . . x . . . . . . .'],
+                        snare: [snareBack, snareBack],
+                        hat: ['. . o . . . o . . . o . . . o .',
+                              '. . o . . . o . . . o . . . o .']
+                    },
+                    {   // Réponse (Do, Sol) : la mélodie monte puis retombe
+                        bass: ['48 . 48 . 48 . 48 . 48 . 48 . 48 . 50 .',
+                               '43 . 43 . 43 . 43 . 43 . 43 . 43 . 45 .'],
+                        lead: ['. . 79 - 76 - 72 - - - . . 74 - - -',
+                               '. . 71 - 74 - 79 - - - - - - - . .'],
+                        pad:  ['60+64+67 - - - - - - - - - - - - - - -',
+                               '55+59+62 - - - - - - - - - - - - - - -'],
+                        kick: ['x . . . . . . . x . . . . . . .',
+                               'x . . . . . . . x . . . o . o .'],
+                        snare: [snareBack, snareBack],
+                        hat: ['. . o . . . o . . . o . . . o .',
+                              '. . o . . . o . . . o . . . . .'],
+                        open: [silence16, '. . . . . . . . . . . . . . x .']
+                    }
+                ]
+            }),
+
+            /* ---------------------------------------------------------- */
+            /*  Combat A (La mineur) : riff de basse en doubles croches,    */
+            /*  pont tendu, refrain qui s'ouvre.                            */
+            /* ---------------------------------------------------------- */
+            game: SoundManager.compile({
+                name: 'game', bpm: 138, swing: 0.06, leadWave: 'pulse12',
+                sections: [
+                    {   // Couplet (La m, Sol), joué deux fois
+                        repeat: 2,
+                        bass: ['33 . 33 33 . 33 . 33 45 . 33 . 40 . 43 .',
+                               '31 . 31 31 . 31 . 31 43 . 31 . 38 . 41 .'],
+                        lead: ['69 . 76 - 74 . 72 - 69 . 67 . 69 - - .',
+                               '67 . 74 - 72 . 71 - 67 . 65 . 67 - - .'],
+                        kick: [kickRock, kickRock],
+                        snare: [snareBack, snareBack],
+                        hat: [hat8, hat8]
+                    },
+                    {   // Variation : la mélodie passe à l'octave, l'arpège entre
+                        bass: ['33 . 33 33 . 33 . 33 45 . 33 . 40 . 43 .',
+                               '31 . 31 31 . 31 . 31 43 . 31 . 38 . 41 .'],
+                        lead: ['81 . 88 - 86 . 84 - 81 . 79 . 81 - - .',
+                               '79 . 86 - 84 . 83 - 79 . 77 . 79 - - .'],
+                        arp: ['57 . 60 . 64 . 60 . 55 . 59 . 62 . 59 .',
+                              '55 . 59 . 62 . 59 . 53 . 57 . 60 . 57 .'],
+                        kick: [kickRock, kickRock],
+                        snare: [snareBack, '. . . . X . . . . . . . X . x . '],
+                        hat: [hat16, hat16]
+                    },
+                    {   // Pont (Fa, Mi) : le Mi majeur ramène vers La mineur
+                        bass: ['29 . 29 29 . 29 . 29 41 . 29 . 36 . 39 .',
+                               '28 . 28 28 . 28 . 28 40 . 28 . 35 . 38 .'],
+                        lead: ['77 - 76 - 74 - 72 - 74 - - . 72 . 69 .',
+                               '76 - 75 - 74 - 72 - 71 - - - 68 - - -'],
+                        pad:  ['53+57+60 - - - - - - - - - - - - - - -',
+                               '52+56+59 - - - - - - - - - - - - - - -'],
+                        kick: ['x . . . . . x . x . . . . . x .',
+                               'x . . . . . x . x . . x . . x .'],
+                        snare: [snareBack, '. . . . X . . . . . . . X . x x'],
+                        hat: [hat8, hat8]
+                    },
+                    {   // Refrain : deux accords par mesure, mélodie tenue
+                        bass: ['33 . 33 . 33 . 33 . 29 . 29 . 29 . 29 .',
+                               '36 . 36 . 36 . 36 . 31 . 31 . 31 . 31 .'],
+                        lead: ['81 - - . 79 - 77 - 76 - - . 74 - 72 -',
+                               '76 - - . 79 - 81 - 79 - - - - - . .'],
+                        arp: ['88 . 84 . 81 . 84 . 89 . 84 . 81 . 84 .',
+                              '84 . 79 . 76 . 79 . 86 . 83 . 79 . 83 .'],
+                        pad:  ['57+60+64 - - - - - - - 53+57+60 - - - - - - -',
+                               '48+52+55 - - - - - - - 50+55+59 - - - - - - -'],
+                        kick: [kickRock, 'X . . . . . x . x . . . x . x .'],
+                        snare: [snareBack, '. . . . X . . . . . . . X . x x'],
+                        hat: [hat16, hat16],
+                        open: [silence16, '. . . . . . . . . . . . . . x .']
+                    }
+                ]
+            }),
+
+            /* ---------------------------------------------------------- */
+            /*  Combat B (Ré mineur) : le thème qui prend le relais toutes   */
+            /*  les cinq vagues, plus rapide et plus tendu que le premier.   */
+            /* ---------------------------------------------------------- */
+            gameAlt: SoundManager.compile({
+                name: 'gameAlt', bpm: 146, swing: 0.05, leadWave: 'pulse25',
+                sections: [
+                    {   // Couplet (Ré m, Do)
+                        repeat: 2,
+                        bass: ['38 . 38 38 . 38 . 38 50 . 38 . 45 . 48 .',
+                               '36 . 36 36 . 36 . 36 48 . 36 . 43 . 46 .'],
+                        lead: ['74 . 81 - 79 . 77 - 74 . 72 . 74 - - .',
+                               '72 . 79 - 77 . 76 - 72 . 70 . 72 - - .'],
+                        kick: ['X . . x . . X . x . . . . . x .',
+                               'X . . x . . X . x . . . . . x .'],
+                        snare: [snareBack, snareBack],
+                        hat: [hat16, hat16]
+                    },
+                    {   // Pont (Si b, La) : la sensible do dièse serre l'harmonie
+                        bass: ['34 . 34 34 . 34 . 34 46 . 34 . 41 . 44 .',
+                               '33 . 33 33 . 33 . 33 45 . 33 . 40 . 45 .'],
+                        lead: ['82 - 81 - 79 - 77 - 79 - - . 77 . 74 .',
+                               '81 - 80 - 79 - 77 - 76 - - - 73 - - -'],
+                        pad:  ['46+50+53 - - - - - - - - - - - - - - -',
+                               '45+49+52 - - - - - - - - - - - - - - -'],
+                        kick: ['X . . x . . X . x . . . . . x .',
+                               'X . . x . . X . x . . x . . x .'],
+                        snare: [snareBack, '. . . . X . . . . . . . X . x x'],
+                        hat: [hat8, hat8]
+                    },
+                    {   // Refrain
+                        bass: ['38 . 38 . 38 . 38 . 34 . 34 . 34 . 34 .',
+                               '41 . 41 . 41 . 41 . 33 . 33 . 33 . 33 .'],
+                        lead: ['86 - - . 84 - 82 - 81 - - . 79 - 77 -',
+                               '81 - - . 84 - 86 - 85 - - - - - . .'],
+                        arp: ['89 . 86 . 81 . 86 . 89 . 86 . 82 . 86 .',
+                              '89 . 84 . 81 . 84 . 88 . 85 . 81 . 85 .'],
+                        pad:  ['50+53+57 - - - - - - - 46+50+53 - - - - - - -',
+                               '53+57+60 - - - - - - - 49+52+57 - - - - - - -'],
+                        kick: ['X . . x . . X . x . . . . . x .',
+                               'X . . x . . X . x . . . x . x .'],
+                        snare: [snareBack, '. . . . X . . . . . . . X . x x'],
+                        hat: [hat16, hat16],
+                        open: [silence16, '. . . . . . . . . . . . . . x .']
+                    }
+                ]
+            }),
+
+            /* ---------------------------------------------------------- */
+            /*  Boss : mode phrygien (seconde mineure), grosse caisse       */
+            /*  serrée, puis un refrain en demi-tempo qui écrase tout.      */
+            /* ---------------------------------------------------------- */
+            boss: SoundManager.compile({
+                name: 'boss', bpm: 152, swing: 0, leadWave: 'pulse12',
+                sections: [
+                    {   // Riff : Mi et Fa se frottent, c'est la menace
+                        repeat: 2,
+                        bass: ['28 28 . 28 29 . 28 . 28 28 . 28 . 29 . 28',
+                               '28 28 . 28 29 . 28 . 35 . 34 . 33 . 32 .'],
+                        lead: ['64 . 65 . 64 . 71 - 70 - . . 64 . 65 .',
+                               '64 . 65 . 64 . 72 - 71 - 70 - 69 - - .'],
+                        kick: ['X . . x . . X . x . . x . . X .',
+                               'X . . x . . X . x . . x . . X .'],
+                        snare: ['. . . . X . . . . . . . X . . x',
+                                '. . . . X . . . . . . . X . x x'],
+                        hat: [hat16, hat16]
+                    },
+                    {   // Montée chromatique : le boss charge
+                        bass: ['28 28 . 28 29 . 28 . 30 30 . 30 31 . 30 .',
+                               '32 . 32 . 33 . 33 . 34 . 34 . 35 . 35 35'],
+                        lead: ['76 - 75 - 76 - 75 - 77 - 76 - 77 - 76 -',
+                               '79 - - . 78 - - . 80 - - . 83 - - -'],
+                        kick: ['X . . x . . X . x . . x . . X .',
+                               'X . x . X . x . X . x . X x X x'],
+                        snare: ['. . . . X . . . . . . . X . . x',
+                                '. . . . X . . x . . . . X . x x'],
+                        hat: [hat16, hat16],
+                        open: [silence16, '. . . . . . . . . . . . . . x .']
+                    },
+                    {   // Refrain en demi-tempo : accords tenus, coups espacés
+                        bass: ['28 - - - - - - - 31 - - - - - - -',
+                               '33 - - - - - - - 29 - - - - - - -'],
+                        lead: ['76 - - - - - 75 - - - . . 71 - - -',
+                               '74 - - - - - 73 - - - - - 76 - - -'],
+                        pad:  ['52+59+64 - - - - - - - - - - - - - - -',
+                               '57+64+69 - - - - - - - - - - - - - - -'],
+                        kick: ['X . . . . . . . . . . . x . . .',
+                               'X . . . . . . . . . . . x . x .'],
+                        snare: ['. . . . . . . . X . . . . . . .',
+                                '. . . . . . . . X . . . . . x x'],
+                        tom: ['. . . . . . . . . . . . . . . .',
+                              '. . . . . . . . . . . . o . o .'],
+                        hat: [hat8, hat8]
+                    }
+                ]
+            }),
+
+            /* ---------------------------------------------------------- */
+            /*  Mode bonus : Fa majeur bondissant, basse en octaves.        */
+            /* ---------------------------------------------------------- */
+            bonus: SoundManager.compile({
+                name: 'bonus', bpm: 128, swing: 0.14, leadWave: 'pulse33',
+                sections: [
+                    {   // Fa, puis Sol / La
+                        bass: ['41 . 53 . 41 . 53 . 41 . 53 . 41 . 53 .',
+                               '43 . 55 . 43 . 55 . 45 . 57 . 45 . 57 .'],
+                        lead: ['77 . 81 . 84 . 81 . 77 . 81 . 84 . 89 .',
+                               '79 . 83 . 86 . 83 . 81 . 84 . 88 . 84 .'],
+                        kick: ['x . . . . . . . x . . . . . . .',
+                               'x . . . . . . . x . . . . . . .'],
+                        snare: [snareBack, snareBack],
+                        hat: [hat8, hat8]
+                    },
+                    {   // Si bémol, Do : la phrase se répond à elle-même
+                        bass: ['46 . 58 . 46 . 58 . 46 . 58 . 46 . 58 .',
+                               '48 . 60 . 48 . 60 . 43 . 55 . 43 . 55 .'],
+                        lead: ['82 - 81 - 79 . 77 . 79 - 81 - 84 - - .',
+                               '84 - 83 - 81 . 79 . 77 - - - - - . .'],
+                        arp: ['89 . 86 . 82 . 86 . 89 . 86 . 82 . 86 .',
+                              '88 . 84 . 79 . 84 . 86 . 83 . 79 . 83 .'],
+                        pad:  ['46+50+53 - - - - - - - - - - - - - - -',
+                               '48+52+55 - - - - - - - 43+47+50 - - - - - - -'],
+                        kick: ['x . . . . . . . x . . . . . . .',
+                               'x . . . . . . . x . . . x . x .'],
+                        snare: [snareBack, '. . . . X . . . . . . . X . x x'],
+                        hat: [hat8, hat8],
+                        open: [silence16, '. . . . . . . . . . . . . . x .']
+                    }
+                ]
+            }),
+
+            /* ---------------------------------------------------------- */
+            /*  Défaite : marche funèbre à peine rythmée, jouée sous        */
+            /*  l'écran de score. Elle doit peser sans agacer.              */
+            /* ---------------------------------------------------------- */
+            gameOver: SoundManager.compile({
+                name: 'gameOver', bpm: 64, swing: 0, leadWave: 'pulse33',
+                sections: [
+                    {   // La mineur, puis Mi majeur : la chute
+                        bass: ['45 - - - - - - - - - - - - - - -',
+                               '40 - - - - - - - - - - - - - - -'],
+                        lead: ['69 - - - 67 - - - 65 - - - - - . .',
+                               '64 - - - - - - - 63 - - - - - - -'],
+                        pad:  ['57+60+64 - - - - - - - - - - - - - - -',
+                               '52+56+59 - - - - - - - - - - - - - - -'],
+                        tom: ['o . . . . . . . . . . . . . . .',
+                              'o . . . . . . . . . . . . . . .']
+                    },
+                    {   // Fa, Mi : la mélodie tente de remonter et retombe
+                        bass: ['41 - - - - - - - - - - - - - - -',
+                               '40 - - - - - - - - - - - - - - -'],
+                        lead: ['72 - - - 71 - - - 69 - - - - - . .',
+                               '68 - - - - - - - 69 - - - - - - -'],
+                        pad:  ['53+57+60 - - - - - - - - - - - - - - -',
+                               '52+56+59 - - - - - - - - - - - - - - -'],
+                        tom: ['o . . . . . . . . . . . . . . .',
+                              'o . . . . . . . . . . . o . . .']
+                    }
+                ]
+            }),
+
+            /* ---------------------------------------------------------- */
+            /*  Record battu : fanfare en Do majeur, la piste que l'on       */
+            /*  vient chercher dans une salle d'arcade.                     */
+            /* ---------------------------------------------------------- */
+            victory: SoundManager.compile({
+                name: 'victory', bpm: 116, swing: 0, leadWave: 'pulse25',
+                sections: [
+                    {   // Do, Mi m puis Fa, Sol
+                        bass: ['36 . 48 . 36 . 48 . 40 . 52 . 40 . 52 .',
+                               '41 . 53 . 41 . 53 . 43 . 55 . 43 . 55 .'],
+                        lead: ['72 . 76 . 79 . 84 - - . 83 . 79 . 76 .',
+                               '77 . 81 . 84 . 89 - - - 88 - 86 - 84 -'],
+                        pad:  ['48+52+55 - - - - - - - 52+55+59 - - - - - - -',
+                               '53+57+60 - - - - - - - 55+59+62 - - - - - - -'],
+                        kick: ['x . . . . . . . x . . . . . . .',
+                               'x . . . . . . . x . . . . . x .'],
+                        snare: [snareBack, snareBack],
+                        hat: [hat8, hat8]
+                    },
+                    {   // La m, Fa puis Sol, Do : la cadence conclut
+                        bass: ['45 . 57 . 45 . 57 . 41 . 53 . 41 . 53 .',
+                               '43 . 55 . 43 . 55 . 36 . 48 . 36 . 48 .'],
+                        lead: ['81 - - . 79 . 77 . 76 - - . 74 . 72 .',
+                               '74 . 76 . 79 - 81 - 84 - - - - - . .'],
+                        arp: ['93 . 88 . 84 . 88 . 89 . 84 . 81 . 84 .',
+                              '91 . 86 . 83 . 86 . 96 . 91 . 88 . 84 .'],
+                        pad:  ['45+52+57 - - - - - - - 41+48+53 - - - - - - -',
+                               '43+50+55 - - - - - - - 48+55+60 - - - - - - -'],
+                        kick: ['x . . . . . . . x . . . . . . .',
+                               'x . . . . . . . x . . . x . x .'],
+                        snare: [snareBack, '. . . . X . . . . . . . X . x x'],
+                        hat: [hat8, hat8],
+                        open: [silence16, '. . . . . . . . . . . . . . x .']
+                    }
+                ]
+            })
         };
     }
+
+    /* ------------------------------------------------------------------ */
+    /*  Instruments musicaux                                               */
+    /* ------------------------------------------------------------------ */
+
+    /** Onde de lead d'une piste, résolue après l'initialisation du contexte. */
+    leadWaveOf(track) {
+        return this[track.leadWave] || this.pulse25;
+    }
+
+    /**
+     * Basse : une impulsion 25 % passée dans un filtre qui se referme, doublée
+     * d'un triangle à la même hauteur. Le filtre donne l'attaque, le triangle
+     * donne le fondamental que les petits haut-parleurs restituent mal.
+     */
+    musicBass(midi, duration, delay, vel = 1) {
+        const freq = SoundManager.midiToFreq(midi);
+        const dur = Math.max(0.05, duration * 0.9);
+        this.tone({
+            freq: freq, wave: this.pulse25, duration: dur, gain: 0.24 * vel,
+            delay: delay, attack: 0.005, hold: dur * 0.45, bus: 'music',
+            filter: 'lowpass', filterFreq: 2800, endFilterFreq: 620, q: 3
+        });
+        this.tone({
+            freq: freq, type: 'triangle', duration: dur * 0.9, gain: 0.2 * vel,
+            delay: delay, attack: 0.004, hold: dur * 0.35, bus: 'music'
+        });
+    }
+
+    /**
+     * Mélodie : deux impulsions désaccordées de quelques centièmes et écartées
+     * dans le champ stéréo. Le vibrato ne se déclenche que sur les notes
+     * tenues, et l'écho rythmé leur répond une croche pointée plus loin.
+     */
+    musicLead(midi, duration, delay, wave, vel = 1) {
+        const freq = SoundManager.midiToFreq(midi);
+        const dur = Math.max(0.05, duration * 0.94);
+        const sustained = duration > 0.3;
+        this.tone({
+            freq: freq, wave: wave, duration: dur, gain: 0.15 * vel,
+            delay: delay, detune: -7, attack: 0.006, hold: dur * 0.55,
+            bus: 'music', echo: 0.3, send: 0.08, pan: -0.18,
+            vibrato: sustained ? 5.5 : 0, vibratoDepth: 16,
+            filter: 'lowpass', filterFreq: 5200, q: 0.8
+        });
+        this.tone({
+            freq: freq, wave: wave, duration: dur * 0.96, gain: 0.09 * vel,
+            delay: delay + 0.008, detune: 8, attack: 0.006, hold: dur * 0.5,
+            bus: 'music', pan: 0.18,
+            filter: 'lowpass', filterFreq: 4200
+        });
+    }
+
+    /** Arpège : brefs éclats de triangle largement renvoyés dans l'écho. */
+    musicArp(midi, duration, delay, vel = 1) {
+        this.tone({
+            freq: SoundManager.midiToFreq(midi), type: 'triangle',
+            duration: Math.min(0.17, duration * 0.8), gain: 0.085 * vel,
+            delay: delay, bus: 'music', echo: 0.4, pan: 0.3
+        });
+    }
+
+    /**
+     * Nappe : les notes de l'accord sont étalées dans le champ stéréo et
+     * attaquées à quelques millisecondes d'écart. Le filtre s'ouvre puis se
+     * referme sur la durée de l'accord, ce qui l'empêche de rester figé.
+     */
+    musicPad(midis, duration, delay, vel = 1) {
+        const list = [].concat(midis);
+        const spread = list.length > 1 ? 0.7 / (list.length - 1) : 0;
+        list.forEach((midi, i) => {
+            this.tone({
+                freq: SoundManager.midiToFreq(midi), type: 'sawtooth',
+                duration: duration * 0.98, gain: 0.05 * vel,
+                delay: delay + i * 0.012,
+                attack: Math.min(0.18, duration * 0.3), hold: duration * 0.35,
+                bus: 'music', send: 0.25,
+                pan: list.length > 1 ? -0.35 + i * spread : 0,
+                filter: 'lowpass', filterFreq: 1500, endFilterFreq: 700, q: 1.2
+            });
+        });
+    }
+
+    /** Grosse caisse : balayage sinusoïdal court avec un claquement de bruit. */
+    musicKick(delay, vel = 1) {
+        this.tone({
+            freq: 172, endFreq: 44, type: 'sine', duration: 0.17,
+            gain: 0.46 * vel, delay: delay, attack: 0.002, bus: 'music'
+        });
+        this.noise({
+            duration: 0.02, gain: 0.1 * vel, filterFreq: 3200,
+            filterType: 'highpass', delay: delay, bus: 'music'
+        });
+    }
+
+    /** Caisse claire : bruit filtré en cloche plus un corps accordé. */
+    musicSnare(delay, vel = 1) {
+        this.noise({
+            duration: 0.15, gain: 0.22 * vel, filterFreq: 2400,
+            endFilterFreq: 900, filterType: 'bandpass', q: 0.8,
+            delay: delay, bus: 'music', send: 0.12
+        });
+        this.tone({
+            freq: 195, endFreq: 150, type: 'triangle', duration: 0.09,
+            gain: 0.14 * vel, delay: delay, bus: 'music'
+        });
+    }
+
+    /** Charleston : salve de bruit aigu, fermée ou ouverte. */
+    musicHat(delay, vel = 1, open = false) {
+        this.noise({
+            duration: open ? 0.17 : 0.04,
+            gain: (open ? 0.08 : 0.1) * vel,
+            filterFreq: open ? 7000 : 8500, filterType: 'highpass',
+            delay: delay, bus: 'music', pan: 0.22
+        });
+    }
+
+    /** Tom grave : le battement de cœur des passages lents. */
+    musicTom(delay, vel = 1) {
+        this.tone({
+            freq: 125, endFreq: 68, type: 'sine', duration: 0.3,
+            gain: 0.3 * vel, delay: delay, attack: 0.003,
+            bus: 'music', send: 0.25
+        });
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  Séquenceur                                                         */
+    /* ------------------------------------------------------------------ */
 
     /**
      * Change la piste jouée en boucle. `null` coupe la musique.
@@ -1128,13 +1722,60 @@ class SoundManager {
      * seule au premier geste de l'utilisateur.
      */
     setMusic(name) {
-        if (name === this.currentTrack) return;
-        this.currentTrack = name && this.tracks[name] ? name : null;
+        this.clearPendingMusic();
+        const next = (name && this.tracks[name]) ? name : null;
+        if (next === this.currentTrack) return;
+        this.currentTrack = next;
         this.step = 0;
         this.stopScheduler();
         if (this.currentTrack && this.ready) {
+            this.syncEcho();
+            this.fadeMusicIn();
             this.startScheduler();
         }
+    }
+
+    /**
+     * Programme un changement de piste différé. Les thèmes de fin de partie
+     * ne doivent pas démarrer sous la fanfare qui les annonce : on leur laisse
+     * le temps de retomber. Tout appel direct à `setMusic()` annule l'attente,
+     * pour qu'une partie relancée entre-temps ne voie pas surgir la marche
+     * funèbre au milieu de la première vague.
+     */
+    setMusicLater(name, seconds) {
+        this.clearPendingMusic();
+        this.pendingMusic = setTimeout(() => {
+            this.pendingMusic = null;
+            this.setMusic(name);
+        }, seconds * 1000);
+    }
+
+    clearPendingMusic() {
+        if (this.pendingMusic) {
+            clearTimeout(this.pendingMusic);
+            this.pendingMusic = null;
+        }
+    }
+
+    /** Cale le retard de l'écho sur une croche pointée du tempo courant. */
+    syncEcho() {
+        if (!this.musicDelay) return;
+        const track = this.tracks[this.currentTrack];
+        const now = this.ctx.currentTime;
+        this.musicDelay.delayTime.setTargetAtTime(
+            Math.min(1.4, this.stepDuration(track) * 3), now, 0.05);
+    }
+
+    /**
+     * Fondu d'entrée : une piste qui démarre en pleine puissance sur un
+     * changement d'état claque désagréablement, surtout entre deux vagues.
+     */
+    fadeMusicIn() {
+        const gain = this.musicBus.gain;
+        const now = this.ctx.currentTime;
+        gain.cancelScheduledValues(now);
+        gain.setValueAtTime(0.0001, now);
+        gain.linearRampToValueAtTime(this.musicVolume, now + 0.35);
     }
 
     startScheduler() {
@@ -1150,12 +1791,27 @@ class SoundManager {
         }
     }
 
+    /** Durée d'une double croche au tempo de la piste. */
+    stepDuration(track) {
+        return 60 / track.bpm / 4;
+    }
+
+    /**
+     * Durée réelle d'un pas, swing compris : les pas pairs sont allongés et
+     * les impairs raccourcis d'autant. Le tempo moyen ne bouge pas, mais la
+     * rythmique cesse d'être mécanique.
+     */
+    stepLength(track, step) {
+        const base = this.stepDuration(track);
+        if (!track.swing) return base;
+        return step % 2 === 0 ? base * (1 + track.swing) : base * (1 - track.swing);
+    }
+
     /** Planifie à l'avance les pas de la boucle musicale. */
     scheduleMusic() {
         if (!this.ready || !this.currentTrack) return;
         if (this.ctx.state !== 'running') return;
         const track = this.tracks[this.currentTrack];
-        const stepDuration = 60 / track.bpm / 2; // double croches
 
         // Après une suspension (onglet caché, pause), l'horloge a pris de
         // l'avance : on se recale au lieu de rattraper tous les pas manqués.
@@ -1165,49 +1821,39 @@ class SoundManager {
 
         while (this.nextStepTime < this.ctx.currentTime + this.lookAhead) {
             this.playMusicStep(track, this.step, this.nextStepTime - this.ctx.currentTime);
-            this.nextStepTime += stepDuration;
-            this.step = (this.step + 1) % track.bass.length;
+            this.nextStepTime += this.stepLength(track, this.step);
+            this.step++;
+            // L'introduction ne s'entend qu'une fois : la boucle repart au
+            // point de rebouclage, pas au début de la piste.
+            if (this.step >= track.length) this.step = track.loopStart;
         }
     }
 
     playMusicStep(track, step, delay) {
-        const stepDuration = 60 / track.bpm / 2;
+        const base = this.stepDuration(track);
 
-        const bassNote = track.bass[step];
-        if (bassNote !== null && bassNote !== undefined) {
-            this.tone({
-                freq: SoundManager.midiToFreq(bassNote),
-                type: 'square',
-                duration: stepDuration * 0.85,
-                gain: 0.3,
-                delay: delay,
-                bus: 'music'
-            });
+        const bass = track.bass[step];
+        if (bass) this.musicBass([].concat(bass.note)[0], base * bass.len, delay);
+
+        const lead = track.lead[step];
+        if (lead) {
+            this.musicLead([].concat(lead.note)[0], base * lead.len, delay,
+                this.leadWaveOf(track));
         }
 
-        const leadNote = track.lead[step];
-        if (leadNote !== null && leadNote !== undefined) {
-            this.tone({
-                freq: SoundManager.midiToFreq(leadNote),
-                type: track.leadType || 'square',
-                duration: stepDuration * 0.7,
-                gain: 0.16,
-                delay: delay,
-                bus: 'music'
-            });
-        }
+        const arp = track.arp[step];
+        if (arp) this.musicArp([].concat(arp.note)[0], base * arp.len, delay);
 
-        if (track.kick && track.kick.includes(step)) {
-            this.tone({
-                freq: 150, endFreq: 45, type: 'sine',
-                duration: 0.14, gain: 0.5, delay: delay, bus: 'music'
-            });
-        }
-        if (track.hat && track.hat.includes(step)) {
-            this.noise({
-                duration: 0.05, gain: 0.1, filterFreq: 7000,
-                filterType: 'highpass', delay: delay, bus: 'music'
-            });
-        }
+        const pad = track.pad[step];
+        if (pad) this.musicPad(pad.note, base * pad.len, delay);
+
+        if (track.kick[step]) this.musicKick(delay, track.kick[step]);
+        if (track.snare[step]) this.musicSnare(delay, track.snare[step]);
+        if (track.hat[step]) this.musicHat(delay, track.hat[step], false);
+        if (track.open[step]) this.musicHat(delay, track.open[step], true);
+        if (track.tom[step]) this.musicTom(delay, track.tom[step]);
     }
 }
+
+/** Marqueur de liaison dans les partitions (voir `SoundManager.notes`). */
+SoundManager.TIE = -1;

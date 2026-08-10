@@ -56,9 +56,15 @@ class GameManager {
         return soundManager.panFor(centerX);
     };
 
-    /** Nom de la piste musicale correspondant à la vague en cours. */
+    /**
+     * Nom de la piste musicale correspondant à la vague en cours.
+     * Les vagues de boss ont leur thème ; entre elles, deux thèmes de combat
+     * se relaient d'un groupe de vagues à l'autre pour qu'une longue partie
+     * ne tourne pas sur la même boucle du début à la fin.
+     */
     currentMusicTrack() {
-        return (this.wave % 5 === 0) ? 'boss' : 'game';
+        if (this.wave % 5 === 0) return 'boss';
+        return (Math.floor(this.wave / 5) % 2 === 0) ? 'game' : 'gameAlt';
     };
 
     /**
@@ -93,11 +99,16 @@ class GameManager {
                     // Le nouveau record n'est écrit qu'ensuite par drawGameOver :
                     // on peut donc encore le comparer au précédent.
                     const best = parseInt(localStorage.getItem('highScore'), 10);
-                    if (this.score > 0 && (isNaN(best) || this.score > best)) {
+                    const record = (this.score > 0 && (isNaN(best) || this.score > best));
+                    if (record) {
                         this.playSound('playHighScore');
                     } else {
                         this.playSound('playGameOver');
                     }
+                    // La fanfare (ou la chute) doit retomber avant que le thème
+                    // de fin de partie ne s'installe sous l'écran de score.
+                    this.playSound('setMusicLater', record ? 'victory' : 'gameOver',
+                        record ? 2.6 : 2.4);
                     break;
                 }
             }
