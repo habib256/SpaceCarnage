@@ -2,6 +2,40 @@
 
 Toutes les modifications notables à ce projet seront documentées dans ce fichier.
 
+## [0.7.1] - 2026-08-12 - Expressive Music Edition
+
+Deuxième passe sur la musique : les partitions gagnent l'expression qui leur
+manquait, et le mixage a été mesuré puis corrigé.
+
+- **Expression note à note** dans la notation : `69!` accent, `69~` note
+  adoucie, `>69` glissando (la note est attaquée à la hauteur précédente puis
+  glisse jusqu'à la sienne). Les riffs de basse respirent, les fins de phrase
+  glissent au lieu de sauter.
+- **Arpèges de puce** : sur un accord, une seule voix balaye les notes à
+  ~40 Hz en reprogrammant la hauteur de l'oscillateur — exactement ce que
+  faisaient les consoles 8 bits, limitées à trois canaux. C'est le son
+  signature qui manquait au timbre général.
+- **Seconde voix mélodique** (`harm`) : les refrains sont harmonisés en
+  tierces et sixtes, dans un timbre plus rond et de l'autre côté du champ
+  stéréo. C'est ce qui fait passer un thème de « mélodie » à « refrain ».
+- **Cymbale crash** (`crash`) : les enchaînements de sections s'entendent enfin.
+- **Nuances** : chaque section porte son propre niveau — intro en retrait,
+  refrain qui s'ouvre — et chaque piste son niveau global.
+- **Vibrato retardé** : il s'installe après l'attaque au lieu d'être présent
+  d'emblée, comme un chanteur qui pose d'abord sa note.
+- **Boucles allongées** : le mode bonus passe de 7,5 s à 15 s, l'écran titre à
+  22 s, les thèmes de combat à ~20 s. Nouvelles sections partout : variations
+  à l'octave, breaks où la basse remonte seule, roulements de toms avant les
+  reprises.
+- **Mixage corrigé après mesure** : le grave occupait jusqu'à 54 % de
+  l'énergie contre 12 % pour le médium, où vit la mélodie. Basse, doublure et
+  grosse caisse redescendues, mélodie, contrechant et arpèges remontés, plus
+  un coupe-bas à 32 Hz sur le bus musical qui récupère de la marge avant le
+  limiteur. Le médium passe à 16-22 %.
+- **Niveaux alignés entre pistes** : les cinq thèmes d'action tiennent
+  désormais dans 0,6 dB (contre 6,4 dB d'écart), l'écran titre et la marche
+  funèbre restant volontairement 3,4 dB en dessous.
+
 ## [0.7.0] - 2026-08-10 - Music Edition
 
 Le séquenceur musical est entièrement reconstruit. La première version bouclait

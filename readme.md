@@ -85,9 +85,15 @@ télécharger : **tout est synthétisé en temps réel** par la Web Audio API.
   astéroïdes, marche funèbre du game over et **fanfare de victoire** quand le
   record tombe. La bascule est automatique.
 - 🎹 **Un vrai petit orchestre 8 bits** : basse à filtre résonant, mélodie en
-  impulsions désaccordées et vibrato, arpèges, nappes d'accords et batterie
-  synthétisée — le tout avec un **écho calé sur le tempo**, exactement comme sur
-  les puces sonores d'époque.
+  impulsions désaccordées, seconde voix qui harmonise les refrains en tierces,
+  **arpèges de puce** (une seule voix qui balaye un accord à quarante hertz, le
+  son signature des consoles d'époque), nappes d'accords et batterie complète —
+  le tout avec un **écho calé sur le tempo**.
+- 🎼 **Des morceaux qui jouent la nuance** : accents, notes adoucies,
+  glissandos, vibrato qui s'installe après l'attaque, intros en retrait et
+  refrains qui s'ouvrent, roulements de toms avant les reprises. Chaque
+  partition a été **mesurée puis remixée** pour que la mélodie reste devant et
+  qu'aucun changement de thème ne saute au volume.
 - 💥 **Bruitages multi-couches** : chaque son est bâti comme en studio —
   transitoire claquant, corps métallique en synthèse FM, queue harmonique et
   pluie de débris. Tirs (simple, double, triple, latéral), tirs ennemis et de

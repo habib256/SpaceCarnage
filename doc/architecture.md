@@ -104,16 +104,26 @@ SpaceCarnage/
 #### Séquenceur musical (dans soundManager.js)
 - Partitions écrites en notation « tracker » : une chaîne par mesure, seize
   jetons pour seize doubles croches — `69` (note MIDI), `57+60+64` (accord),
-  `-` (liaison, prolonge la note), `.` (silence)
-- Chaîne de compilation : `notes()` / `hits()` analysent les chaînes, `fit()`
-  vérifie la longueur des mesures, `events()` transforme les liaisons en durées
-  et `compile()` déroule les sections en une boucle unique
+  `-` (liaison, prolonge la note), `.` (silence), `69!` (accent), `69~` (note
+  adoucie), `>69` (glissando depuis la note précédente)
+- Chaîne de compilation : `parseToken()` / `notes()` / `hits()` analysent les
+  chaînes, `fit()` vérifie la longueur des mesures, `events()` transforme les
+  liaisons en durées et résout les glissandos, `compile()` déroule les sections
+  en une boucle unique
 - Structure par sections (intro, couplet, pont, refrain) avec `repeat` et
   `loopFrom` : ce qui précède le point de rebouclage ne s'entend qu'une fois
-- Cinq voies : `bass`, `lead`, `arp`, `pad` et une batterie (`kick`, `snare`,
-  `hat`, `open`, `tom`) dont les symboles portent une vélocité
-- Instruments dédiés (`musicBass()`, `musicLead()`, `musicArp()`, `musicPad()`,
-  `musicKick()`, `musicSnare()`, `musicHat()`, `musicTom()`)
+- Nuances : `gain` par section (intro en retrait, refrain qui s'ouvre) et
+  `gain` par piste, mesuré au rendu pour aligner les thèmes entre eux
+- Six voies : `bass`, `lead`, `harm` (seconde voix), `arp`, `pad` et une
+  batterie (`kick`, `snare`, `hat`, `open`, `tom`, `crash`) dont les symboles
+  portent une vélocité
+- Instruments dédiés (`musicBass()`, `musicLead()`, `musicHarm()`, `musicArp()`,
+  `musicPad()`, `musicKick()`, `musicSnare()`, `musicHat()`, `musicTom()`,
+  `musicCrash()`)
+- Arpège de puce : sur un accord, `musicArp()` reprogramme la hauteur d'un seul
+  oscillateur à ~40 Hz (option `arpNotes` de `tone()`) au lieu d'empiler les
+  voix — c'est littéralement ce que faisaient les puces 8 bits, limitées à
+  trois canaux
 - Bus d'écho musical (`buildMusicEcho()`) recalé sur le tempo à chaque
   changement de piste par `syncEcho()`, et swing optionnel via `stepLength()`
 - `setMusic()` avec fondu d'entrée, et `setMusicLater()` pour les thèmes de fin
