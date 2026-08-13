@@ -2,6 +2,61 @@
 
 Toutes les modifications notables à ce projet seront documentées dans ce fichier.
 
+## [0.7.2] - 2026-08-13 - Arrangement Edition
+
+Les partitions sont réécrites : les mélodies chantent au lieu d'énumérer des
+notes, et chaque section appelle la suivante au lieu de simplement s'arrêter.
+
+- **Mélodies retravaillées** :
+  - `title` : phrase en rythme pointé qui monte vers le Mi et redescend se
+    poser ; la réponse reprend le même élan un ton plus haut et reste
+    suspendue sur le Ré qui ramène au thème. La basse quitte les croches
+    répétées pour un balancement fondamentale-quinte, plus spatial ;
+  - `game` / `gameAlt` : riff de couplet syncopé (départ sur le temps, rebond,
+    chute sur la sensible), pont dont la fin **remonte en marches vers le
+    refrain** au lieu de retomber, et refrain qui culmine désormais sur
+    l'aigu avant de rappeler le couplet — sur `gameAlt`, la fin du pont
+    dessine un La7 qui appelle littéralement le Ré mineur du refrain ;
+  - `bonus` : mordant chromatique espiègle sur les sommets d'arpège, et une
+    pirouette d'octave en fin de phrase ;
+  - `gameOver` : la chute devient une vraie descente en soupirs
+    (Do-La, Sol, Fa, Mi) — le motif de lamentation classique.
+- **Arrangements enrichis** :
+  - l'arpège traverse maintenant tout l'écran titre (il ne s'arrêtait plus
+    après l'intro) et scintille dès la première mesure de `victory` ;
+  - `boss` : **drone de quinte à vide** qui gronde sous le riff, arpège qui
+    grimpe la montée chromatique deux octaves au-dessus de la basse, et
+    charleston ouvert en cymbale sur le temps fort du demi-tempo ;
+  - `gameOver` : cloches éparses en écho au-dessus de la marche funèbre ;
+  - **fills de toms** à la fin des refrains de combat pour préparer le
+    rebouclage.
+- **Arpèges en ping-pong stéréo** : chaque éclat change de côté et l'écho lui
+  répond de l'autre — le scintillement devient spatial sur toutes les pistes.
+
+## [0.7.1] - 2026-08-13 - Dynamic Music Edition
+
+La musique passe au niveau supérieur avec le joueur : les thèmes de combat
+montent en intensité à chaque vague au lieu de tourner à l'identique du début
+du cycle jusqu'au boss.
+
+- **Intensité dramatique** (`SoundManager.setIntensity()`, 0 à 1) appliquée aux
+  pistes marquées `dynamic` (`game`, `gameAlt`, `boss`). Les thèmes hors combat
+  (titre, bonus, défaite, victoire) ne bougent pas.
+- **Quatre leviers, tous progressifs** :
+  - le tempo se resserre jusqu'à +10 %, l'accélération des bornes d'arcade
+    quand la partie se corse ;
+  - la batterie et la basse frappent jusqu'à 25 % plus fort ;
+  - les pas de charleston vides se remplissent de frappes fantômes : la
+    pulsation double sans réécrire les grilles ;
+  - la mélodie gagne une discrète doublure à l'octave au plus fort de la
+    tension.
+- **Pilotage par la vague** (`GameManager.currentMusicIntensity()`) : la
+  tension repart de zéro au début de chaque cycle de cinq vagues, monte d'un
+  cran par vague et culmine sur le boss. Le cycle suivant redémarre plus bas,
+  avec l'autre thème de combat : la partie respire au lieu de saturer.
+- Le changement passe par le scheduler : aucune coupure ni relance de piste,
+  l'écho synchronisé suit le nouveau tempo (`syncEcho()`).
+
 ## [0.7.0] - 2026-08-10 - Music Edition
 
 Le séquenceur musical est entièrement reconstruit. La première version bouclait

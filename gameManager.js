@@ -68,6 +68,18 @@ class GameManager {
     };
 
     /**
+     * Intensité musicale (0 à 1) correspondant à la vague en cours : la
+     * tension remonte à chaque vague du cycle de cinq — tempo, batterie et
+     * doublures gagnent un cran à chaque niveau — et culmine sur le boss.
+     * Le cycle suivant repart plus bas, avec l'autre thème de combat : la
+     * partie respire au lieu de saturer.
+     */
+    currentMusicIntensity() {
+        if (this.wave % 5 === 0) return 1;
+        return Math.min(1, ((this.wave - 1) % 5) / 3);
+    };
+
+    /**
      * Synchronise la musique et les jingles avec l'état du jeu.
      * Appelée à chaque frame : les changements de piste sont ignorés
      * lorsque la piste demandée est déjà en cours de lecture.
@@ -77,21 +89,25 @@ class GameManager {
         if (stateChanged) {
             switch (this.gameState) {
                 case "title":
+                    this.playSound('setIntensity', 0);
                     this.playSound('setMusic', 'title');
                     break;
                 case "transition":
                     if (this.lastAudioState === "title" || this.lastAudioState === "gameOver") {
                         this.playSound('playStart');
                     }
+                    this.playSound('setIntensity', this.currentMusicIntensity());
                     this.playSound('setMusic', this.currentMusicTrack());
                     if (this.wave % 5 === 0) {
                         this.playSound('playBossWarning');
                     }
                     break;
                 case "game":
+                    this.playSound('setIntensity', this.currentMusicIntensity());
                     this.playSound('setMusic', this.currentMusicTrack());
                     break;
                 case "bonus":
+                    this.playSound('setIntensity', 0);
                     this.playSound('setMusic', 'bonus');
                     break;
                 case "gameOver": {
@@ -115,6 +131,7 @@ class GameManager {
             this.lastAudioState = this.gameState;
         } else if (this.gameState === "game") {
             // Une vague de boss commence : bascule sur le thème adéquat.
+            this.playSound('setIntensity', this.currentMusicIntensity());
             this.playSound('setMusic', this.currentMusicTrack());
         }
     };

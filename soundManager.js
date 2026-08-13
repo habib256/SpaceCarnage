@@ -31,6 +31,9 @@ class SoundManager {
         // alternent pour que la mitraille ne sonne jamais deux fois pareil.
         this.shotVariant = 0;
 
+        // Côté du prochain éclat d'arpège (ping-pong stéréo).
+        this.arpSide = false;
+
         this.masterVolume = 0.8;
         this.sfxVolume = 0.9;
         this.musicVolume = 0.3;
@@ -45,6 +48,12 @@ class SoundManager {
         this.step = 0;
         this.lookAhead = 0.15;      // secondes planifiées à l'avance
         this.schedulerDelay = 30;   // période du scheduler en ms
+
+        // Intensité dramatique (0 à 1) : elle suit la progression du joueur
+        // et fait monter les pistes de combat d'un cran à chaque vague —
+        // tempo, frappe de la batterie, doublures. Les thèmes hors combat
+        // (titre, défaite...) l'ignorent.
+        this.intensity = 0;
 
         // Limitation du nombre de sons identiques joués coup sur coup
         this.lastPlayed = {};
@@ -1236,6 +1245,7 @@ class SoundManager {
             bpm: def.bpm,
             swing: def.swing || 0,
             leadWave: def.leadWave || null,
+            dynamic: !!def.dynamic,
             loopStart: 0,
             length: 0
         };
@@ -1285,25 +1295,29 @@ class SoundManager {
             title: SoundManager.compile({
                 name: 'title', bpm: 86, swing: 0, leadWave: 'pulse25', loopFrom: 2,
                 sections: [
-                    {   // Intro : la nappe s'installe, l'arpège scintille (La m, Fa)
+                    {   // Intro : la nappe s'installe, l'arpège grimpe jusqu'au sommet
                         pad: ['57+60+64 - - - - - - - - - - - - - - -',
                               '53+57+60 - - - - - - - - - - - - - - -'],
-                        arp: ['69 . 72 . 76 . 81 . 76 . 72 . 69 . 72 .',
-                              '65 . 69 . 72 . 77 . 72 . 69 . 65 . 69 .']
+                        arp: ['69 . 72 . 76 . 81 . 84 . 81 . 76 . 72 .',
+                              '65 . 69 . 72 . 77 . 81 . 77 . 72 . 69 .']
                     },
                     {   // Suite de l'intro (Do, Sol), le charleston annonce le tempo
                         pad: ['60+64+67 - - - - - - - - - - - - - - -',
                               '55+59+62 - - - - - - - - - - - - - - -'],
-                        arp: ['72 . 76 . 79 . 84 . 79 . 76 . 72 . 76 .',
-                              '67 . 71 . 74 . 79 . 74 . 71 . 67 . 71 .'],
+                        arp: ['72 . 76 . 79 . 84 . 88 . 84 . 79 . 76 .',
+                              '67 . 71 . 74 . 79 . 83 . 79 . 74 . 71 .'],
                         hat: ['. . o . . . o . . . o . . . o .',
                               '. . o . . . o . . . o . . . o .']
                     },
-                    {   // Thème principal (La m, Fa) : c'est ici que la boucle revient
-                        bass: ['45 . 45 . 45 . 45 . 45 . 45 . 45 . 47 .',
-                               '41 . 41 . 41 . 41 . 41 . 41 . 41 . 43 .'],
-                        lead: ['. . 76 - 74 - 72 - - - . . 69 - - -',
-                               '. . 72 - 74 - 76 - - - . . 77 - - -'],
+                    {   // Thème principal (La m, Fa) : phrase en rythme pointé qui
+                        // monte vers le Mi puis redescend se poser ; la basse passe
+                        // des croches répétées à un balancement fondamentale-quinte.
+                        bass: ['45 . . . 45 . 52 . 45 . . . 45 . 47 .',
+                               '41 . . . 41 . 48 . 41 . . . 41 . 43 .'],
+                        lead: ['69 - - 72 - - 76 - - - 74 - 72 - 74 -',
+                               '77 - - - 72 - - - 74 - 72 - 69 - - -'],
+                        arp:  ['57 . 60 . 64 . 60 . 57 . 60 . 64 . 60 .',
+                               '53 . 57 . 60 . 57 . 53 . 57 . 60 . 57 .'],
                         pad:  ['57+60+64 - - - - - - - - - - - - - - -',
                                '53+57+60 - - - - - - - - - - - - - - -'],
                         kick: ['x . . . . . . . x . . . . . . .',
@@ -1312,11 +1326,14 @@ class SoundManager {
                         hat: ['. . o . . . o . . . o . . . o .',
                               '. . o . . . o . . . o . . . o .']
                     },
-                    {   // Réponse (Do, Sol) : la mélodie monte puis retombe
-                        bass: ['48 . 48 . 48 . 48 . 48 . 48 . 48 . 50 .',
-                               '43 . 43 . 43 . 43 . 43 . 43 . 43 . 45 .'],
-                        lead: ['. . 79 - 76 - 72 - - - . . 74 - - -',
-                               '. . 71 - 74 - 79 - - - - - - - . .'],
+                    {   // Réponse (Do, Sol) : même élan un ton plus haut, résolution
+                        // suspendue sur le Ré qui ramène naturellement au thème.
+                        bass: ['48 . . . 48 . 55 . 48 . . . 48 . 50 .',
+                               '43 . . . 43 . 50 . 43 . . . 43 . 45 .'],
+                        lead: ['72 - - 76 - - 79 - - - 81 - 79 - 76 -',
+                               '74 - - - 79 - - - 71 - 74 - - - . .'],
+                        arp:  ['60 . 64 . 67 . 64 . 60 . 64 . 67 . 64 .',
+                               '55 . 59 . 62 . 59 . 55 . 59 . 62 . 59 .'],
                         pad:  ['60+64+67 - - - - - - - - - - - - - - -',
                                '55+59+62 - - - - - - - - - - - - - - -'],
                         kick: ['x . . . . . . . x . . . . . . .',
@@ -1334,14 +1351,15 @@ class SoundManager {
             /*  pont tendu, refrain qui s'ouvre.                            */
             /* ---------------------------------------------------------- */
             game: SoundManager.compile({
-                name: 'game', bpm: 138, swing: 0.06, leadWave: 'pulse12',
+                name: 'game', bpm: 138, swing: 0.06, leadWave: 'pulse12', dynamic: true,
                 sections: [
-                    {   // Couplet (La m, Sol), joué deux fois
+                    {   // Couplet (La m, Sol), joué deux fois : le riff démarre sur
+                        // le temps, rebondit en syncope et retombe sur la sensible.
                         repeat: 2,
                         bass: ['33 . 33 33 . 33 . 33 45 . 33 . 40 . 43 .',
                                '31 . 31 31 . 31 . 31 43 . 31 . 38 . 41 .'],
-                        lead: ['69 . 76 - 74 . 72 - 69 . 67 . 69 - - .',
-                               '67 . 74 - 72 . 71 - 67 . 65 . 67 - - .'],
+                        lead: ['69 . . 69 76 - 74 . 72 - 69 . 67 - 69 -',
+                               '67 . . 67 74 - 72 . 71 - 67 . 65 - 64 -'],
                         kick: [kickRock, kickRock],
                         snare: [snareBack, snareBack],
                         hat: [hat8, hat8]
@@ -1349,19 +1367,20 @@ class SoundManager {
                     {   // Variation : la mélodie passe à l'octave, l'arpège entre
                         bass: ['33 . 33 33 . 33 . 33 45 . 33 . 40 . 43 .',
                                '31 . 31 31 . 31 . 31 43 . 31 . 38 . 41 .'],
-                        lead: ['81 . 88 - 86 . 84 - 81 . 79 . 81 - - .',
-                               '79 . 86 - 84 . 83 - 79 . 77 . 79 - - .'],
+                        lead: ['81 . . 81 88 - 86 . 84 - 81 . 79 - 81 -',
+                               '79 . . 79 86 - 84 . 83 - 79 . 77 - 76 -'],
                         arp: ['57 . 60 . 64 . 60 . 55 . 59 . 62 . 59 .',
                               '55 . 59 . 62 . 59 . 53 . 57 . 60 . 57 .'],
                         kick: [kickRock, kickRock],
                         snare: [snareBack, '. . . . X . . . . . . . X . x . '],
                         hat: [hat16, hat16]
                     },
-                    {   // Pont (Fa, Mi) : le Mi majeur ramène vers La mineur
+                    {   // Pont (Fa, Mi) : descente chromatique, puis la fin remonte
+                        // en marches (Sol#, Si, Ré) pour lancer le refrain d'un élan.
                         bass: ['29 . 29 29 . 29 . 29 41 . 29 . 36 . 39 .',
                                '28 . 28 28 . 28 . 28 40 . 28 . 35 . 38 .'],
                         lead: ['77 - 76 - 74 - 72 - 74 - - . 72 . 69 .',
-                               '76 - 75 - 74 - 72 - 71 - - - 68 - - -'],
+                               '76 - 75 - 74 - 72 - 71 - 68 - 71 - 74 -'],
                         pad:  ['53+57+60 - - - - - - - - - - - - - - -',
                                '52+56+59 - - - - - - - - - - - - - - -'],
                         kick: ['x . . . . . x . x . . . . . x .',
@@ -1369,11 +1388,13 @@ class SoundManager {
                         snare: [snareBack, '. . . . X . . . . . . . X . x x'],
                         hat: [hat8, hat8]
                     },
-                    {   // Refrain : deux accords par mesure, mélodie tenue
+                    {   // Refrain : deux accords par mesure, la mélodie culmine sur
+                        // le Do aigu avant de retomber sur le Sol qui rappelle le
+                        // couplet ; les toms préparent le rebouclage.
                         bass: ['33 . 33 . 33 . 33 . 29 . 29 . 29 . 29 .',
                                '36 . 36 . 36 . 36 . 31 . 31 . 31 . 31 .'],
                         lead: ['81 - - . 79 - 77 - 76 - - . 74 - 72 -',
-                               '76 - - . 79 - 81 - 79 - - - - - . .'],
+                               '76 - - . 79 - 81 - 84 - - - 79 - - .'],
                         arp: ['88 . 84 . 81 . 84 . 89 . 84 . 81 . 84 .',
                               '84 . 79 . 76 . 79 . 86 . 83 . 79 . 83 .'],
                         pad:  ['57+60+64 - - - - - - - 53+57+60 - - - - - - -',
@@ -1381,7 +1402,8 @@ class SoundManager {
                         kick: [kickRock, 'X . . . . . x . x . . . x . x .'],
                         snare: [snareBack, '. . . . X . . . . . . . X . x x'],
                         hat: [hat16, hat16],
-                        open: [silence16, '. . . . . . . . . . . . . . x .']
+                        open: [silence16, '. . . . . . . . . . . . . . x .'],
+                        tom: [silence16, '. . . . . . . . o . o . x . . .']
                     }
                 ]
             }),
@@ -1391,24 +1413,26 @@ class SoundManager {
             /*  les cinq vagues, plus rapide et plus tendu que le premier.   */
             /* ---------------------------------------------------------- */
             gameAlt: SoundManager.compile({
-                name: 'gameAlt', bpm: 146, swing: 0.05, leadWave: 'pulse25',
+                name: 'gameAlt', bpm: 146, swing: 0.05, leadWave: 'pulse25', dynamic: true,
                 sections: [
-                    {   // Couplet (Ré m, Do)
+                    {   // Couplet (Ré m, Do) : même énergie syncopée que le thème A,
+                        // la fin retombe sur le La dominant qui rappelle Ré mineur.
                         repeat: 2,
                         bass: ['38 . 38 38 . 38 . 38 50 . 38 . 45 . 48 .',
                                '36 . 36 36 . 36 . 36 48 . 36 . 43 . 46 .'],
-                        lead: ['74 . 81 - 79 . 77 - 74 . 72 . 74 - - .',
-                               '72 . 79 - 77 . 76 - 72 . 70 . 72 - - .'],
+                        lead: ['74 . . 74 81 - 79 . 77 - 74 . 72 - 74 -',
+                               '72 . . 72 79 - 77 . 76 - 72 . 70 - 69 -'],
                         kick: ['X . . x . . X . x . . . . . x .',
                                'X . . x . . X . x . . . . . x .'],
                         snare: [snareBack, snareBack],
                         hat: [hat16, hat16]
                     },
-                    {   // Pont (Si b, La) : la sensible do dièse serre l'harmonie
+                    {   // Pont (Si b, La) : la sensible do dièse serre l'harmonie,
+                        // puis la fin remonte en La7 — l'appel d'air vers le refrain.
                         bass: ['34 . 34 34 . 34 . 34 46 . 34 . 41 . 44 .',
                                '33 . 33 33 . 33 . 33 45 . 33 . 40 . 45 .'],
                         lead: ['82 - 81 - 79 - 77 - 79 - - . 77 . 74 .',
-                               '81 - 80 - 79 - 77 - 76 - - - 73 - - -'],
+                               '81 - 80 - 79 - 77 - 76 - 73 - 76 - 79 -'],
                         pad:  ['46+50+53 - - - - - - - - - - - - - - -',
                                '45+49+52 - - - - - - - - - - - - - - -'],
                         kick: ['X . . x . . X . x . . . . . x .',
@@ -1416,11 +1440,12 @@ class SoundManager {
                         snare: [snareBack, '. . . . X . . . . . . . X . x x'],
                         hat: [hat8, hat8]
                     },
-                    {   // Refrain
+                    {   // Refrain : la cadence conclut sur le do dièse résolu au La,
+                        // et les toms ramènent au couplet.
                         bass: ['38 . 38 . 38 . 38 . 34 . 34 . 34 . 34 .',
                                '41 . 41 . 41 . 41 . 33 . 33 . 33 . 33 .'],
                         lead: ['86 - - . 84 - 82 - 81 - - . 79 - 77 -',
-                               '81 - - . 84 - 86 - 85 - - - - - . .'],
+                               '81 - - . 84 - 86 - 85 - - - 81 - - .'],
                         arp: ['89 . 86 . 81 . 86 . 89 . 86 . 82 . 86 .',
                               '89 . 84 . 81 . 84 . 88 . 85 . 81 . 85 .'],
                         pad:  ['50+53+57 - - - - - - - 46+50+53 - - - - - - -',
@@ -1429,7 +1454,8 @@ class SoundManager {
                                'X . . x . . X . x . . . x . x .'],
                         snare: [snareBack, '. . . . X . . . . . . . X . x x'],
                         hat: [hat16, hat16],
-                        open: [silence16, '. . . . . . . . . . . . . . x .']
+                        open: [silence16, '. . . . . . . . . . . . . . x .'],
+                        tom: [silence16, '. . . . . . . . o . o . x . . .']
                     }
                 ]
             }),
@@ -1439,25 +1465,31 @@ class SoundManager {
             /*  serrée, puis un refrain en demi-tempo qui écrase tout.      */
             /* ---------------------------------------------------------- */
             boss: SoundManager.compile({
-                name: 'boss', bpm: 152, swing: 0, leadWave: 'pulse12',
+                name: 'boss', bpm: 152, swing: 0, leadWave: 'pulse12', dynamic: true,
                 sections: [
-                    {   // Riff : Mi et Fa se frottent, c'est la menace
+                    {   // Riff : Mi et Fa se frottent sur un drone de quinte à vide
+                        // qui gronde sous tout le passage — la menace est continue.
                         repeat: 2,
                         bass: ['28 28 . 28 29 . 28 . 28 28 . 28 . 29 . 28',
                                '28 28 . 28 29 . 28 . 35 . 34 . 33 . 32 .'],
                         lead: ['64 . 65 . 64 . 71 - 70 - . . 64 . 65 .',
                                '64 . 65 . 64 . 72 - 71 - 70 - 69 - - .'],
+                        pad:  ['40+47 - - - - - - - - - - - - - - -',
+                               '40+47 - - - - - - - - - - - - - - -'],
                         kick: ['X . . x . . X . x . . x . . X .',
                                'X . . x . . X . x . . x . . X .'],
                         snare: ['. . . . X . . . . . . . X . . x',
                                 '. . . . X . . . . . . . X . x x'],
                         hat: [hat16, hat16]
                     },
-                    {   // Montée chromatique : le boss charge
+                    {   // Montée chromatique : le boss charge, l'arpège grimpe les
+                        // mêmes marches deux octaves au-dessus de la basse.
                         bass: ['28 28 . 28 29 . 28 . 30 30 . 30 31 . 30 .',
                                '32 . 32 . 33 . 33 . 34 . 34 . 35 . 35 35'],
                         lead: ['76 - 75 - 76 - 75 - 77 - 76 - 77 - 76 -',
                                '79 - - . 78 - - . 80 - - . 83 - - -'],
+                        arp: ['52 . 53 . 52 . 53 . 54 . 55 . 54 . 55 .',
+                              '56 . 57 . 56 . 57 . 58 . 59 . 58 . 59 .'],
                         kick: ['X . . x . . X . x . . x . . X .',
                                'X . x . X . x . X . x . X x X x'],
                         snare: ['. . . . X . . . . . . . X . . x',
@@ -1465,7 +1497,8 @@ class SoundManager {
                         hat: [hat16, hat16],
                         open: [silence16, '. . . . . . . . . . . . . . x .']
                     },
-                    {   // Refrain en demi-tempo : accords tenus, coups espacés
+                    {   // Refrain en demi-tempo : accords tenus, coups espacés, le
+                        // charleston ouvert claque comme une cymbale sur le temps fort.
                         bass: ['28 - - - - - - - 31 - - - - - - -',
                                '33 - - - - - - - 29 - - - - - - -'],
                         lead: ['76 - - - - - 75 - - - . . 71 - - -',
@@ -1478,7 +1511,9 @@ class SoundManager {
                                 '. . . . . . . . X . . . . . x x'],
                         tom: ['. . . . . . . . . . . . . . . .',
                               '. . . . . . . . . . . . o . o .'],
-                        hat: [hat8, hat8]
+                        hat: [hat8, hat8],
+                        open: ['x . . . . . . . . . . . . . . .',
+                               '. . . . . . . . . . . . . . x .']
                     }
                 ]
             }),
@@ -1489,11 +1524,12 @@ class SoundManager {
             bonus: SoundManager.compile({
                 name: 'bonus', bpm: 128, swing: 0.14, leadWave: 'pulse33',
                 sections: [
-                    {   // Fa, puis Sol / La
+                    {   // Fa, puis Sol / La : l'arpège rebondit et se permet un
+                        // mordant chromatique — le clin d'œil des jeux de bonus.
                         bass: ['41 . 53 . 41 . 53 . 41 . 53 . 41 . 53 .',
                                '43 . 55 . 43 . 55 . 45 . 57 . 45 . 57 .'],
-                        lead: ['77 . 81 . 84 . 81 . 77 . 81 . 84 . 89 .',
-                               '79 . 83 . 86 . 83 . 81 . 84 . 88 . 84 .'],
+                        lead: ['77 . 81 . 84 - - 83 84 . 81 . 77 - - .',
+                               '79 . 83 . 86 - - 85 86 . 88 . 89 - - .'],
                         kick: ['x . . . . . . . x . . . . . . .',
                                'x . . . . . . . x . . . . . . .'],
                         snare: [snareBack, snareBack],
@@ -1503,7 +1539,7 @@ class SoundManager {
                         bass: ['46 . 58 . 46 . 58 . 46 . 58 . 46 . 58 .',
                                '48 . 60 . 48 . 60 . 43 . 55 . 43 . 55 .'],
                         lead: ['82 - 81 - 79 . 77 . 79 - 81 - 84 - - .',
-                               '84 - 83 - 81 . 79 . 77 - - - - - . .'],
+                               '84 - 83 - 81 . 79 . 77 - - - 72 . 77 .'],
                         arp: ['89 . 86 . 82 . 86 . 89 . 86 . 82 . 86 .',
                               '88 . 84 . 79 . 84 . 86 . 83 . 79 . 83 .'],
                         pad:  ['46+50+53 - - - - - - - - - - - - - - -',
@@ -1524,11 +1560,14 @@ class SoundManager {
             gameOver: SoundManager.compile({
                 name: 'gameOver', bpm: 64, swing: 0, leadWave: 'pulse33',
                 sections: [
-                    {   // La mineur, puis Mi majeur : la chute
+                    {   // La mineur, puis Mi majeur : une longue descente en
+                        // soupirs (Do-La, Sol, Fa, Mi) sur des cloches éparses.
                         bass: ['45 - - - - - - - - - - - - - - -',
                                '40 - - - - - - - - - - - - - - -'],
-                        lead: ['69 - - - 67 - - - 65 - - - - - . .',
-                               '64 - - - - - - - 63 - - - - - - -'],
+                        lead: ['72 - 69 - - - 67 - 65 - - - 64 - - -',
+                               '64 - - - - - 63 - - - 64 - - - - -'],
+                        arp: ['57 . . . 60 . . . 64 . . . 60 . . .',
+                              '56 . . . 59 . . . 64 . . . 59 . . .'],
                         pad:  ['57+60+64 - - - - - - - - - - - - - - -',
                                '52+56+59 - - - - - - - - - - - - - - -'],
                         tom: ['o . . . . . . . . . . . . . . .',
@@ -1537,8 +1576,10 @@ class SoundManager {
                     {   // Fa, Mi : la mélodie tente de remonter et retombe
                         bass: ['41 - - - - - - - - - - - - - - -',
                                '40 - - - - - - - - - - - - - - -'],
-                        lead: ['72 - - - 71 - - - 69 - - - - - . .',
+                        lead: ['74 - 72 - - - 71 - 69 - - - - - . .',
                                '68 - - - - - - - 69 - - - - - - -'],
+                        arp: ['57 . . . 60 . . . 65 . . . 60 . . .',
+                              '56 . . . 59 . . . 64 . . . 59 . . .'],
                         pad:  ['53+57+60 - - - - - - - - - - - - - - -',
                                '52+56+59 - - - - - - - - - - - - - - -'],
                         tom: ['o . . . . . . . . . . . . . . .',
@@ -1554,11 +1595,14 @@ class SoundManager {
             victory: SoundManager.compile({
                 name: 'victory', bpm: 116, swing: 0, leadWave: 'pulse25',
                 sections: [
-                    {   // Do, Mi m puis Fa, Sol
+                    {   // Do, Mi m puis Fa, Sol : l'arpège scintille dès la
+                        // première mesure, la fanfare n'attend pas.
                         bass: ['36 . 48 . 36 . 48 . 40 . 52 . 40 . 52 .',
                                '41 . 53 . 41 . 53 . 43 . 55 . 43 . 55 .'],
                         lead: ['72 . 76 . 79 . 84 - - . 83 . 79 . 76 .',
                                '77 . 81 . 84 . 89 - - - 88 - 86 - 84 -'],
+                        arp: ['84 . 79 . 76 . 79 . 88 . 83 . 79 . 83 .',
+                              '89 . 84 . 81 . 84 . 91 . 86 . 83 . 86 .'],
                         pad:  ['48+52+55 - - - - - - - 52+55+59 - - - - - - -',
                                '53+57+60 - - - - - - - 55+59+62 - - - - - - -'],
                         kick: ['x . . . . . . . x . . . . . . .',
@@ -1619,7 +1663,7 @@ class SoundManager {
      * dans le champ stéréo. Le vibrato ne se déclenche que sur les notes
      * tenues, et l'écho rythmé leur répond une croche pointée plus loin.
      */
-    musicLead(midi, duration, delay, wave, vel = 1) {
+    musicLead(midi, duration, delay, wave, vel = 1, bright = 0) {
         const freq = SoundManager.midiToFreq(midi);
         const dur = Math.max(0.05, duration * 0.94);
         const sustained = duration > 0.3;
@@ -1636,14 +1680,23 @@ class SoundManager {
             bus: 'music', pan: 0.18,
             filter: 'lowpass', filterFreq: 4200
         });
+        // Doublure à l'octave, réservée aux moments de haute intensité :
+        // un triangle discret qui fait briller la mélodie sans l'épaissir.
+        if (bright > 0) {
+            this.tone({
+                freq: freq * 2, type: 'triangle', duration: dur * 0.85,
+                gain: 0.05 * bright * vel, delay: delay + 0.004,
+                bus: 'music', echo: 0.25, pan: 0.05
+            });
+        }
     }
 
     /** Arpège : brefs éclats de triangle largement renvoyés dans l'écho. */
-    musicArp(midi, duration, delay, vel = 1) {
+    musicArp(midi, duration, delay, vel = 1, pan = 0.3) {
         this.tone({
             freq: SoundManager.midiToFreq(midi), type: 'triangle',
             duration: Math.min(0.17, duration * 0.8), gain: 0.085 * vel,
-            delay: delay, bus: 'music', echo: 0.4, pan: 0.3
+            delay: delay, bus: 'music', echo: 0.4, pan: pan
         });
     }
 
@@ -1736,6 +1789,27 @@ class SoundManager {
     }
 
     /**
+     * Règle l'intensité dramatique (0 à 1). Les pistes marquées `dynamic`
+     * l'entendent immédiatement : le tempo se resserre, la batterie frappe
+     * plus fort, le charleston double et la mélodie gagne une doublure à
+     * l'octave. Comme tout passe par le scheduler, le changement est
+     * continu — aucune coupure, la musique passe simplement au niveau
+     * supérieur en même temps que le joueur.
+     */
+    setIntensity(level) {
+        const value = Math.max(0, Math.min(1, level || 0));
+        if (value === this.intensity) return;
+        this.intensity = value;
+        // Le retard de l'écho suit le tempo, qui vient peut-être de changer.
+        if (this.ready && this.currentTrack) this.syncEcho();
+    }
+
+    /** Intensité effective d'une piste : nulle pour les thèmes hors combat. */
+    heat(track) {
+        return track.dynamic ? this.intensity : 0;
+    }
+
+    /**
      * Programme un changement de piste différé. Les thèmes de fin de partie
      * ne doivent pas démarrer sous la fanfare qui les annonce : on leur laisse
      * le temps de retomber. Tout appel direct à `setMusic()` annule l'attente,
@@ -1791,9 +1865,13 @@ class SoundManager {
         }
     }
 
-    /** Durée d'une double croche au tempo de la piste. */
+    /**
+     * Durée d'une double croche au tempo de la piste. L'intensité resserre
+     * le tempo jusqu'à +10 % : l'accélération des bornes d'arcade quand la
+     * partie se corse, sans jamais dénaturer le morceau.
+     */
     stepDuration(track) {
-        return 60 / track.bpm / 4;
+        return 60 / (track.bpm * (1 + 0.1 * this.heat(track))) / 4;
     }
 
     /**
@@ -1831,25 +1909,42 @@ class SoundManager {
 
     playMusicStep(track, step, delay) {
         const base = this.stepDuration(track);
+        const heat = this.heat(track);
+        // La batterie et la basse frappent jusqu'à 25 % plus fort au sommet
+        // de la tension ; la mélodie monte plus modérément pour rester lisible.
+        const drive = 1 + heat * 0.25;
 
         const bass = track.bass[step];
-        if (bass) this.musicBass([].concat(bass.note)[0], base * bass.len, delay);
+        if (bass) this.musicBass([].concat(bass.note)[0], base * bass.len, delay, drive);
 
         const lead = track.lead[step];
         if (lead) {
             this.musicLead([].concat(lead.note)[0], base * lead.len, delay,
-                this.leadWaveOf(track));
+                this.leadWaveOf(track), 1 + heat * 0.12,
+                Math.max(0, (heat - 0.5) * 2));
         }
 
         const arp = track.arp[step];
-        if (arp) this.musicArp([].concat(arp.note)[0], base * arp.len, delay);
+        if (arp) {
+            // Ping-pong stéréo : chaque éclat d'arpège change de côté, et
+            // l'écho lui répond de l'autre — le scintillement devient spatial.
+            this.arpSide = !this.arpSide;
+            this.musicArp([].concat(arp.note)[0], base * arp.len, delay, 1,
+                this.arpSide ? 0.3 : -0.3);
+        }
 
         const pad = track.pad[step];
         if (pad) this.musicPad(pad.note, base * pad.len, delay);
 
-        if (track.kick[step]) this.musicKick(delay, track.kick[step]);
-        if (track.snare[step]) this.musicSnare(delay, track.snare[step]);
-        if (track.hat[step]) this.musicHat(delay, track.hat[step], false);
+        if (track.kick[step]) this.musicKick(delay, track.kick[step] * drive);
+        if (track.snare[step]) this.musicSnare(delay, track.snare[step] * drive);
+        if (track.hat[step]) {
+            this.musicHat(delay, track.hat[step] * drive, false);
+        } else if (heat >= 0.4 && !track.open[step]) {
+            // Aux vagues avancées, les pas de charleston vides se remplissent
+            // de frappes fantômes : la pulsation double sans réécrire la grille.
+            this.musicHat(delay, 0.35 * heat, false);
+        }
         if (track.open[step]) this.musicHat(delay, track.open[step], true);
         if (track.tom[step]) this.musicTom(delay, track.tom[step]);
     }

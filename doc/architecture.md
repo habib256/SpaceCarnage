@@ -113,11 +113,15 @@ SpaceCarnage/
 - Cinq voies : `bass`, `lead`, `arp`, `pad` et une batterie (`kick`, `snare`,
   `hat`, `open`, `tom`) dont les symboles portent une vélocité
 - Instruments dédiés (`musicBass()`, `musicLead()`, `musicArp()`, `musicPad()`,
-  `musicKick()`, `musicSnare()`, `musicHat()`, `musicTom()`)
+  `musicKick()`, `musicSnare()`, `musicHat()`, `musicTom()`) ; les arpèges
+  alternent gauche/droite en ping-pong stéréo
 - Bus d'écho musical (`buildMusicEcho()`) recalé sur le tempo à chaque
   changement de piste par `syncEcho()`, et swing optionnel via `stepLength()`
 - `setMusic()` avec fondu d'entrée, et `setMusicLater()` pour les thèmes de fin
   de partie qui ne doivent pas démarrer sous la fanfare qui les annonce
+- Intensité dramatique (`setIntensity()`, 0 à 1) sur les pistes marquées
+  `dynamic` : tempo resserré jusqu'à +10 %, batterie et basse plus appuyées,
+  frappes fantômes de charleston et doublure de la mélodie à l'octave
 
 ### 2.2 Point d'Entrée (sketch.js)
 - Initialisation du jeu
@@ -152,6 +156,9 @@ Types disponibles :
   `title`, `game` et `gameAlt` (thèmes de combat alternés par
   `currentMusicTrack()` d'un groupe de vagues à l'autre), `boss`, `bonus`,
   `gameOver` et `victory` (record battu)
+- Progression dramatique : `currentMusicIntensity()` fait monter la musique
+  d'un cran à chaque vague du cycle de cinq (tempo, batterie, doublures) et
+  culmine sur le boss ; le cycle suivant repart plus bas avec l'autre thème
 - Bruitages déclenchés depuis les points de gameplay via `GameManager.playSound()`,
   un appel sécurisé qui laisse le jeu fonctionner si l'audio est indisponible
 - Spatialisation stéréo : chaque bruitage reçoit la position de l'entité
