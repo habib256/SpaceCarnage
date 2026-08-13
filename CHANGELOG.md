@@ -2,6 +2,30 @@
 
 Toutes les modifications notables à ce projet seront documentées dans ce fichier.
 
+## [0.7.1] - 2026-08-13 - Dynamic Music Edition
+
+La musique passe au niveau supérieur avec le joueur : les thèmes de combat
+montent en intensité à chaque vague au lieu de tourner à l'identique du début
+du cycle jusqu'au boss.
+
+- **Intensité dramatique** (`SoundManager.setIntensity()`, 0 à 1) appliquée aux
+  pistes marquées `dynamic` (`game`, `gameAlt`, `boss`). Les thèmes hors combat
+  (titre, bonus, défaite, victoire) ne bougent pas.
+- **Quatre leviers, tous progressifs** :
+  - le tempo se resserre jusqu'à +10 %, l'accélération des bornes d'arcade
+    quand la partie se corse ;
+  - la batterie et la basse frappent jusqu'à 25 % plus fort ;
+  - les pas de charleston vides se remplissent de frappes fantômes : la
+    pulsation double sans réécrire les grilles ;
+  - la mélodie gagne une discrète doublure à l'octave au plus fort de la
+    tension.
+- **Pilotage par la vague** (`GameManager.currentMusicIntensity()`) : la
+  tension repart de zéro au début de chaque cycle de cinq vagues, monte d'un
+  cran par vague et culmine sur le boss. Le cycle suivant redémarre plus bas,
+  avec l'autre thème de combat : la partie respire au lieu de saturer.
+- Le changement passe par le scheduler : aucune coupure ni relance de piste,
+  l'écho synchronisé suit le nouveau tempo (`syncEcho()`).
+
 ## [0.7.0] - 2026-08-10 - Music Edition
 
 Le séquenceur musical est entièrement reconstruit. La première version bouclait

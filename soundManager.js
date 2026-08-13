@@ -46,6 +46,12 @@ class SoundManager {
         this.lookAhead = 0.15;      // secondes planifiées à l'avance
         this.schedulerDelay = 30;   // période du scheduler en ms
 
+        // Intensité dramatique (0 à 1) : elle suit la progression du joueur
+        // et fait monter les pistes de combat d'un cran à chaque vague —
+        // tempo, frappe de la batterie, doublures. Les thèmes hors combat
+        // (titre, défaite...) l'ignorent.
+        this.intensity = 0;
+
         // Limitation du nombre de sons identiques joués coup sur coup
         this.lastPlayed = {};
 
@@ -1236,6 +1242,7 @@ class SoundManager {
             bpm: def.bpm,
             swing: def.swing || 0,
             leadWave: def.leadWave || null,
+            dynamic: !!def.dynamic,
             loopStart: 0,
             length: 0
         };
@@ -1334,7 +1341,7 @@ class SoundManager {
             /*  pont tendu, refrain qui s'ouvre.                            */
             /* ---------------------------------------------------------- */
             game: SoundManager.compile({
-                name: 'game', bpm: 138, swing: 0.06, leadWave: 'pulse12',
+                name: 'game', bpm: 138, swing: 0.06, leadWave: 'pulse12', dynamic: true,
                 sections: [
                     {   // Couplet (La m, Sol), joué deux fois
                         repeat: 2,
@@ -1391,7 +1398,7 @@ class SoundManager {
             /*  les cinq vagues, plus rapide et plus tendu que le premier.   */
             /* ---------------------------------------------------------- */
             gameAlt: SoundManager.compile({
-                name: 'gameAlt', bpm: 146, swing: 0.05, leadWave: 'pulse25',
+                name: 'gameAlt', bpm: 146, swing: 0.05, leadWave: 'pulse25', dynamic: true,
                 sections: [
                     {   // Couplet (Ré m, Do)
                         repeat: 2,
@@ -1439,7 +1446,7 @@ class SoundManager {
             /*  serrée, puis un refrain en demi-tempo qui écrase tout.      */
             /* ---------------------------------------------------------- */
             boss: SoundManager.compile({
-                name: 'boss', bpm: 152, swing: 0, leadWave: 'pulse12',
+                name: 'boss', bpm: 152, swing: 0, leadWave: 'pulse12', dynamic: true,
                 sections: [
                     {   // Riff : Mi et Fa se frottent, c'est la menace
                         repeat: 2,
@@ -1619,7 +1626,7 @@ class SoundManager {
      * dans le champ stéréo. Le vibrato ne se déclenche que sur les notes
      * tenues, et l'écho rythmé leur répond une croche pointée plus loin.
      */
-    musicLead(midi, duration, delay, wave, vel = 1) {
+    musicLead(midi, duration, delay, wave, vel = 1, bright = 0) {
         const freq = SoundManager.midiToFreq(midi);
         const dur = Math.max(0.05, duration * 0.94);
         const sustained = duration > 0.3;
@@ -1636,6 +1643,15 @@ class SoundManager {
             bus: 'music', pan: 0.18,
             filter: 'lowpass', filterFreq: 4200
         });
+        // Doublure à l'octave, réservée aux moments de haute intensité :
+        // un triangle discret qui fait briller la mélodie sans l'épaissir.
+        if (bright > 0) {
+            this.tone({
+                freq: freq * 2, type: 'triangle', duration: dur * 0.85,
+                gain: 0.05 * bright * vel, delay: delay + 0.004,
+                bus: 'music', echo: 0.25, pan: 0.05
+            });
+        }
     }
 
     /** Arpège : brefs éclats de triangle largement renvoyés dans l'écho. */
@@ -1736,6 +1752,27 @@ class SoundManager {
     }
 
     /**
+     * Règle l'intensité dramatique (0 à 1). Les pistes marquées `dynamic`
+     * l'entendent immédiatement : le tempo se resserre, la batterie frappe
+     * plus fort, le charleston double et la mélodie gagne une doublure à
+     * l'octave. Comme tout passe par le scheduler, le changement est
+     * continu — aucune coupure, la musique passe simplement au niveau
+     * supérieur en même temps que le joueur.
+     */
+    setIntensity(level) {
+        const value = Math.max(0, Math.min(1, level || 0));
+        if (value === this.intensity) return;
+        this.intensity = value;
+        // Le retard de l'écho suit le tempo, qui vient peut-être de changer.
+        if (this.ready && this.currentTrack) this.syncEcho();
+    }
+
+    /** Intensité effective d'une piste : nulle pour les thèmes hors combat. */
+    heat(track) {
+        return track.dynamic ? this.intensity : 0;
+    }
+
+    /**
      * Programme un changement de piste différé. Les thèmes de fin de partie
      * ne doivent pas démarrer sous la fanfare qui les annonce : on leur laisse
      * le temps de retomber. Tout appel direct à `setMusic()` annule l'attente,
@@ -1791,9 +1828,13 @@ class SoundManager {
         }
     }
 
-    /** Durée d'une double croche au tempo de la piste. */
+    /**
+     * Durée d'une double croche au tempo de la piste. L'intensité resserre
+     * le tempo jusqu'à +10 % : l'accélération des bornes d'arcade quand la
+     * partie se corse, sans jamais dénaturer le morceau.
+     */
     stepDuration(track) {
-        return 60 / track.bpm / 4;
+        return 60 / (track.bpm * (1 + 0.1 * this.heat(track))) / 4;
     }
 
     /**
@@ -1831,14 +1872,19 @@ class SoundManager {
 
     playMusicStep(track, step, delay) {
         const base = this.stepDuration(track);
+        const heat = this.heat(track);
+        // La batterie et la basse frappent jusqu'à 25 % plus fort au sommet
+        // de la tension ; la mélodie monte plus modérément pour rester lisible.
+        const drive = 1 + heat * 0.25;
 
         const bass = track.bass[step];
-        if (bass) this.musicBass([].concat(bass.note)[0], base * bass.len, delay);
+        if (bass) this.musicBass([].concat(bass.note)[0], base * bass.len, delay, drive);
 
         const lead = track.lead[step];
         if (lead) {
             this.musicLead([].concat(lead.note)[0], base * lead.len, delay,
-                this.leadWaveOf(track));
+                this.leadWaveOf(track), 1 + heat * 0.12,
+                Math.max(0, (heat - 0.5) * 2));
         }
 
         const arp = track.arp[step];
@@ -1847,9 +1893,15 @@ class SoundManager {
         const pad = track.pad[step];
         if (pad) this.musicPad(pad.note, base * pad.len, delay);
 
-        if (track.kick[step]) this.musicKick(delay, track.kick[step]);
-        if (track.snare[step]) this.musicSnare(delay, track.snare[step]);
-        if (track.hat[step]) this.musicHat(delay, track.hat[step], false);
+        if (track.kick[step]) this.musicKick(delay, track.kick[step] * drive);
+        if (track.snare[step]) this.musicSnare(delay, track.snare[step] * drive);
+        if (track.hat[step]) {
+            this.musicHat(delay, track.hat[step] * drive, false);
+        } else if (heat >= 0.4 && !track.open[step]) {
+            // Aux vagues avancées, les pas de charleston vides se remplissent
+            // de frappes fantômes : la pulsation double sans réécrire la grille.
+            this.musicHat(delay, 0.35 * heat, false);
+        }
         if (track.open[step]) this.musicHat(delay, track.open[step], true);
         if (track.tom[step]) this.musicTom(delay, track.tom[step]);
     }
