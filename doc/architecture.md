@@ -113,7 +113,8 @@ SpaceCarnage/
 - Cinq voies : `bass`, `lead`, `arp`, `pad` et une batterie (`kick`, `snare`,
   `hat`, `open`, `tom`) dont les symboles portent une vélocité
 - Instruments dédiés (`musicBass()`, `musicLead()`, `musicArp()`, `musicPad()`,
-  `musicKick()`, `musicSnare()`, `musicHat()`, `musicTom()`)
+  `musicKick()`, `musicSnare()`, `musicHat()`, `musicTom()`) ; les arpèges
+  alternent gauche/droite en ping-pong stéréo
 - Bus d'écho musical (`buildMusicEcho()`) recalé sur le tempo à chaque
   changement de piste par `syncEcho()`, et swing optionnel via `stepLength()`
 - `setMusic()` avec fondu d'entrée, et `setMusicLater()` pour les thèmes de fin

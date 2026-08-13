@@ -2,6 +2,37 @@
 
 Toutes les modifications notables à ce projet seront documentées dans ce fichier.
 
+## [0.7.2] - 2026-08-13 - Arrangement Edition
+
+Les partitions sont réécrites : les mélodies chantent au lieu d'énumérer des
+notes, et chaque section appelle la suivante au lieu de simplement s'arrêter.
+
+- **Mélodies retravaillées** :
+  - `title` : phrase en rythme pointé qui monte vers le Mi et redescend se
+    poser ; la réponse reprend le même élan un ton plus haut et reste
+    suspendue sur le Ré qui ramène au thème. La basse quitte les croches
+    répétées pour un balancement fondamentale-quinte, plus spatial ;
+  - `game` / `gameAlt` : riff de couplet syncopé (départ sur le temps, rebond,
+    chute sur la sensible), pont dont la fin **remonte en marches vers le
+    refrain** au lieu de retomber, et refrain qui culmine désormais sur
+    l'aigu avant de rappeler le couplet — sur `gameAlt`, la fin du pont
+    dessine un La7 qui appelle littéralement le Ré mineur du refrain ;
+  - `bonus` : mordant chromatique espiègle sur les sommets d'arpège, et une
+    pirouette d'octave en fin de phrase ;
+  - `gameOver` : la chute devient une vraie descente en soupirs
+    (Do-La, Sol, Fa, Mi) — le motif de lamentation classique.
+- **Arrangements enrichis** :
+  - l'arpège traverse maintenant tout l'écran titre (il ne s'arrêtait plus
+    après l'intro) et scintille dès la première mesure de `victory` ;
+  - `boss` : **drone de quinte à vide** qui gronde sous le riff, arpège qui
+    grimpe la montée chromatique deux octaves au-dessus de la basse, et
+    charleston ouvert en cymbale sur le temps fort du demi-tempo ;
+  - `gameOver` : cloches éparses en écho au-dessus de la marche funèbre ;
+  - **fills de toms** à la fin des refrains de combat pour préparer le
+    rebouclage.
+- **Arpèges en ping-pong stéréo** : chaque éclat change de côté et l'écho lui
+  répond de l'autre — le scintillement devient spatial sur toutes les pistes.
+
 ## [0.7.1] - 2026-08-13 - Dynamic Music Edition
 
 La musique passe au niveau supérieur avec le joueur : les thèmes de combat
